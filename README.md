@@ -10,7 +10,7 @@ EduBond is a college-focused platform where students can create profiles using t
 ### 🔐 Gateway
 EduBond ensures a secure, campus-only environment with mandatory institutional email verification.
 
-<img src="./assets/login.jpg" width="800" alt="EduBond Login">
+<img src="./assets/login.png" width="800" alt="EduBond Login">
 
 ---
 
@@ -19,7 +19,7 @@ The central hub for campus news, upcoming events like Tech Fest 2025, and a stud
 
 | Home Dashboard | Campus Marketplace |
 | :---: | :---: |
-| <img src="./assets/home.jpg" width="450"> | <img src="./assets/marketplace.jpg" width="450"> |
+| <img src="./assets/home.png" width="450"> | <img src="./assets/marketplace.png" width="450"> |
 
 ---
 
@@ -29,6 +29,13 @@ Filter study materials by year/branch or check real-time hostel availability and
 | Study Hub (Notes & PYQs) | Hostel Desk |
 | :---: | :---: |
 | <img src="./assets/studyhub.png" width="450"> | <img src="./assets/hosteldesk.png" width="450"> |
+
+---
+
+### 👤 User Profile & Networking
+Showcase your academic identity and manage your campus connections.
+
+<img src="./assets/profile.png" width="800" alt="User Profile">
 
 ---
 
