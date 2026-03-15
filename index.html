@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduBond – Login</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #7c3aed 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .auth-container { display: flex; width: 100%; max-width: 900px; border-radius: 24px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,0.3); background: var(--surface); min-height: 580px; }
+    .auth-left {
+      flex: 1;
+      background: linear-gradient(160deg, #1d4ed8, #7c3aed);
+      padding: 48px 40px;
+      display: flex; flex-direction: column; justify-content: center;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-left::before {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 50%;
+      top: -80px; right: -80px;
+    }
+    .auth-left::after {
+      content: '';
+      position: absolute;
+      width: 200px; height: 200px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+      bottom: -60px; left: -60px;
+    }
+    .auth-logo { font-family: var(--font-head); font-size: 32px; font-weight: 800; margin-bottom: 24px; position: relative; z-index: 1; }
+    .auth-logo span { color: #fbbf24; }
+    .auth-tagline { font-size: 22px; font-weight: 700; line-height: 1.4; margin-bottom: 16px; position: relative; z-index: 1; }
+    .auth-desc { font-size: 14px; opacity: 0.85; line-height: 1.7; position: relative; z-index: 1; }
+    .auth-features { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 1; }
+    .auth-feature { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+    .auth-feature .icon { width: 32px; height: 32px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .auth-right { flex: 1; padding: 48px 40px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
+    .auth-right h2 { font-size: 24px; margin-bottom: 6px; }
+    .auth-right p { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
+    .tabs-auth { display: flex; gap: 0; background: var(--surface2); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 24px; }
+    .tab-auth { flex: 1; padding: 8px 16px; border: none; background: none; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
+    .tab-auth.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
+    .otp-box { display: flex; gap: 8px; justify-content: center; margin: 8px 0 16px; }
+    .otp-digit { width: 46px; height: 52px; border: 2px solid var(--border); border-radius: var(--radius-sm); text-align: center; font-size: 20px; font-weight: 700; font-family: var(--font-head); color: var(--primary); outline: none; background: var(--surface); transition: border-color 0.2s; }
+    .otp-digit:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .resend-link { color: var(--primary); font-size: 13px; cursor: pointer; font-weight: 600; }
+    .resend-link:hover { text-decoration: underline; }
+    .college-badge { background: var(--primary-light); color: var(--primary); border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 10px 16px; font-size: 13px; font-weight: 500; margin-top: -8px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    @media (max-width: 640px) {
+      .auth-left { display: none; }
+      .auth-right { padding: 32px 24px; }
+      .auth-container { border-radius: 16px; }
+      .otp-box { gap: 6px; }
+      .otp-digit { width: 42px; height: 48px; font-size: 18px; }
+    }
+    @media (max-width: 400px) {
+      .otp-box { gap: 5px; }
+      .otp-digit { width: 38px; height: 44px; font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+<div class="auth-container">
+  <!-- Left Panel -->
+  <div class="auth-left">
+    <div class="auth-logo">Edu<span>Bond</span></div>
+    <div class="auth-tagline">Your College Community, Connected 🎓</div>
+    <div class="auth-desc">Connect with classmates, seniors and alumni. Share notes, buy & sell stationery, find hostel info and more — all in one place.</div>
+    <div class="auth-features">
+      <div class="auth-feature"><div class="icon">🤝</div><span>Connect with peers, seniors & alumni</span></div>
+      <div class="auth-feature"><div class="icon">📖</div><span>Share & access free notes & PYQs</span></div>
+      <div class="auth-feature"><div class="icon">🛒</div><span>Marketplace for study materials</span></div>
+      <div class="auth-feature"><div class="icon">🏨</div><span>Hostel info & grievance portal</span></div>
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="auth-right">
+    <h2>Welcome to EduBond</h2>
+    <p>Only for Indira ICEM students — login with your college email</p>
+
+    <div class="tabs-auth">
+      <button class="tab-auth active" onclick="switchAuthTab('login')">Login</button>
+      <button class="tab-auth" onclick="switchAuthTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <div id="loginStep1">
+        <div class="input-group">
+          <label>College Email</label>
+          <input class="input-field" type="email" id="loginEmail" placeholder="yourname@indiraicem.ac.in" />
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <div style="position:relative">
+            <input class="input-field" type="password" id="loginPass" placeholder="Enter your password" />
+            <span onclick="togglePwd('loginPass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;">👁</span>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="doLoginStep1()">Send OTP →</button>
+        <p class="text-center text-sm mt-3 text-muted">Forgot password? <span class="resend-link">Reset here</span></p>
+      </div>
+
+      <div id="loginStep2" class="hidden">
+        <div class="college-badge">📧 OTP sent to <strong id="loginEmailShow"></strong></div>
+        <div class="input-group">
+          <label>Enter 6-digit OTP</label>
+          <div class="otp-box">
+            <input class="otp-digit" maxlength="1" data-idx="0" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" />
+            <input class="otp-digit" maxlength="1" data-idx="1" inputmode="numeric" pattern="[0-9]*" />
+            <input class="otp-digit" maxlength="1" data-idx="2" inputmode="numeric" pattern="[0-9]*" />
+            <input class="otp-digit" maxlength="1" data-idx="3" inputmode="numeric" pattern="[0-9]*" />
+            <input class="otp-digit" maxlength="1" data-idx="4" inputmode="numeric" pattern="[0-9]*" />
+            <input class="otp-digit" maxlength="1" data-idx="5" inputmode="numeric" pattern="[0-9]*" />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="verifyOTP('login')">Verify & Login</button>
+        <p class="text-center text-sm mt-3 text-muted">Didn't receive? <span class="resend-link" onclick="resendOTP()">Resend OTP</span></p>
+      </div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" class="hidden">
+      <div id="regStep1">
+        <div class="grid-2" style="gap:12px;margin-bottom:0">
+          <div class="input-group" style="margin-bottom:14px">
+            <label>Full Name</label>
+            <input class="input-field" id="regName" placeholder="Your full name" />
+          </div>
+          <div class="input-group" style="margin-bottom:14px">
+            <label>College Email</label>
+            <input class="input-field" type="email" id="regEmail" placeholder="you@indiraicem.ac.in" />
+          </div>
+        </div>
+        <div class="grid-2" style="gap:12px;margin-bottom:0">
+          <div class="input-group" style="margin-bottom:14px">
+            <label>Which Year?</label>
+            <select class="input-field" id="regYear">
+              <option value="">Select Year</option>
+              <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option><option>Alumni</option>
+            </select>
+          </div>
+          <div class="input-group" style="margin-bottom:14px">
+            <label>Branch</label>
+            <select class="input-field" id="regBranch">
+              <option value="">Select Branch</option>
+              <option>CSE</option><option>AI & DS</option><option>IT</option><option>ECE</option><option>EE</option><option>ME</option><option>CE</option><option>CH</option>
+            </select>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <div style="position:relative">
+            <input class="input-field" type="password" id="regPass" placeholder="Create a strong password" />
+            <span onclick="togglePwd('regPass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;">👁</span>
+          </div>
+        </div>
+        <div class="college-badge">🔒 Only <strong>@indiraicem.ac.in</strong> emails are accepted</div>
+        <button class="btn btn-primary btn-full" onclick="doRegisterStep1()">Send OTP →</button>
+      </div>
+
+      <div id="regStep2" class="hidden">
+        <div class="college-badge">📧 OTP sent to <strong id="regEmailShow"></strong></div>
+        <div class="input-group">
+          <label>Enter 6-digit OTP</label>
+          <div class="otp-box">
+            <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" />
+            <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" />
+            <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" />
+            <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" />
+            <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" />
+            <input class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="verifyOTP('register')">Verify & Register</button>
+        <p class="text-center text-sm mt-3 text-muted">Wrong email? <span class="resend-link" onclick="document.getElementById('regStep2').classList.add('hidden');document.getElementById('regStep1').classList.remove('hidden')">Go Back</span></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="utils.js"></script>
+<script>
+  // Keep login as the default landing page, even if a prior session exists.
+
+  function switchAuthTab(tab) {
+    document.querySelectorAll('.tab-auth').forEach((t, i) => t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register')));
+    document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+    document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+  }
+
+  function togglePwd(id, el) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    el.textContent = inp.type === 'password' ? '👁' : '🙈';
+  }
+
+  // OTP auto-focus
+  document.addEventListener('input', e => {
+    if (!e.target.classList.contains('otp-digit')) return;
+    const val = e.target.value.replace(/\D/g, '');
+    e.target.value = val;
+    if (val && e.target.nextElementSibling?.classList.contains('otp-digit')) e.target.nextElementSibling.focus();
+  });
+  document.addEventListener('keydown', e => {
+    if (!e.target.classList.contains('otp-digit')) return;
+    if (e.key === 'Backspace' && !e.target.value && e.target.previousElementSibling?.classList.contains('otp-digit')) e.target.previousElementSibling.focus();
+  });
+  document.addEventListener('paste', e => {
+    if (!e.target.classList.contains('otp-digit')) return;
+    e.preventDefault();
+    const text = (e.clipboardData?.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+    if (!text) return;
+    const box = e.target.closest('.otp-box');
+    if (!box) return;
+    const digits = box.querySelectorAll('.otp-digit');
+    for (let i = 0; i < digits.length; i++) digits[i].value = text[i] || '';
+    const focusIdx = Math.min(text.length, digits.length) - 1;
+    if (focusIdx >= 0) digits[focusIdx].focus();
+  });
+
+  let pendingAuth = { mode: '', email: '', password: '', name: '', year: '', branch: '' };
+
+  async function postJSON(url, data) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    let body = {};
+    try { body = await res.json(); } catch { body = {}; }
+    if (!res.ok) throw new Error(body.error || body.detail || 'Request failed');
+    // Surface dev OTP in UI for local testing if backend includes it.
+    if (body.dev_otp) {
+      showToast(`DEV OTP: ${body.dev_otp}`, 'warning');
+      console.log('DEV OTP', body.dev_otp);
+    }
+    return body;
+  }
+
+  function clearOtp(stepId) {
+    document.querySelectorAll(`#${stepId} .otp-digit`).forEach((d, i) => {
+      d.value = '';
+      if (i === 0) d.focus();
+    });
+  }
+
+  async function doLoginStep1() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPass').value;
+    if (!email.endsWith('@indiraicem.ac.in')) return showToast('Only @indiraicem.ac.in emails allowed!', 'error');
+    if (!pass) return showToast('Please enter your password', 'error');
+    try {
+      const data = await postJSON('/api/auth/send-otp/', { email, purpose: 'login' });
+      pendingAuth = { mode: 'login', email: email.toLowerCase(), password: pass, name: '', year: '', branch: '' };
+      showToast(data.message || 'OTP sent to your email', 'success');
+      document.getElementById('loginEmailShow').textContent = email;
+      document.getElementById('loginStep1').classList.add('hidden');
+      document.getElementById('loginStep2').classList.remove('hidden');
+      clearOtp('loginStep2');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function doRegisterStep1() {
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const year = document.getElementById('regYear').value;
+    const branch = document.getElementById('regBranch').value;
+    const pass = document.getElementById('regPass').value;
+    if (!name) return showToast('Please enter your name', 'error');
+    if (!email.endsWith('@indiraicem.ac.in')) return showToast('Only @indiraicem.ac.in emails allowed!', 'error');
+    if (!year) return showToast('Select your year', 'error');
+    if (!branch) return showToast('Select your branch', 'error');
+    if (pass.length < 6) return showToast('Password must be at least 6 characters', 'error');
+    try {
+      const data = await postJSON('/api/auth/send-otp/', { email, purpose: 'register' });
+      pendingAuth = { mode: 'register', email: email.toLowerCase(), password: pass, name, year, branch };
+      showToast(data.message || 'OTP sent to your email', 'success');
+      document.getElementById('regEmailShow').textContent = email;
+      document.getElementById('regStep1').classList.add('hidden');
+      document.getElementById('regStep2').classList.remove('hidden');
+      clearOtp('regStep2');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function verifyOTP(mode) {
+    const step = mode === 'login' ? 'loginStep2' : 'regStep2';
+    const digits = document.querySelectorAll(`#${step} .otp-digit`);
+    const entered = Array.from(digits).map(d => d.value).join('');
+    if (entered.length < 6) return showToast('Enter all 6 digits', 'error');
+    if (pendingAuth.mode !== mode || !pendingAuth.email) return showToast('Please request OTP again.', 'error');
+
+    try {
+      const data = mode === 'login'
+        ? await postJSON('/api/auth/login/', {
+            email: pendingAuth.email,
+            password: pendingAuth.password,
+            otp: entered,
+          })
+        : await postJSON('/api/auth/register/', {
+            email: pendingAuth.email,
+            name: pendingAuth.name,
+            year: pendingAuth.year,
+            branch: pendingAuth.branch,
+            password: pendingAuth.password,
+            otp: entered,
+          });
+
+      const u = data.user || {};
+      const savedProfile = JSON.parse(
+        localStorage.getItem(`edubond_profile_${(u.email || pendingAuth.email || '').toLowerCase()}`) || 'null'
+      );
+      const fallbackName = (u.name || u.email || pendingAuth.email || 'user')
+        .split('@')[0]
+        .replace(/[._-]+/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+      const localUser = {
+        name: u.name || savedProfile?.name || fallbackName || 'User',
+        email: (u.email || pendingAuth.email || '').toLowerCase(),
+        year: u.year || savedProfile?.year || pendingAuth.year || '3rd Year',
+        branch: u.branch || savedProfile?.branch || pendingAuth.branch || 'CSE',
+        college: u.college_name || 'Indira ICEM',
+        avatar: u.profile_pic || savedProfile?.avatar || '',
+        is_staff: !!u.is_staff,
+        is_superuser: !!u.is_superuser,
+      };
+      localStorage.removeItem('edubond_profile');
+      localStorage.setItem('edubond_access', data.access || '');
+      localStorage.setItem('edubond_refresh', data.refresh || '');
+      Auth.setUser(localUser);
+      showToast('OTP verified! Logging in...', 'success');
+      setTimeout(() => window.location.href = 'home.html', 800);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function resendOTP() {
+    if (!pendingAuth.email || !pendingAuth.mode) return showToast('Please start login/register first.', 'warning');
+    try {
+      const data = await postJSON('/api/auth/send-otp/', { email: pendingAuth.email, purpose: pendingAuth.mode });
+      showToast(data.message || 'New OTP sent', 'warning');
+      clearOtp(pendingAuth.mode === 'login' ? 'loginStep2' : 'regStep2');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduBond – Marketplace</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .market-header { background: linear-gradient(135deg, #1d4ed8, #7c3aed); color: #fff; padding: 32px 24px; border-radius: var(--radius-lg); margin-bottom: 24px; }
+    .market-header h2 { font-size: 26px; margin-bottom: 6px; }
+    .market-header p { opacity: 0.85; font-size: 14px; }
+    .market-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+    .filter-bar .search-box { flex: 1; min-width: 200px; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 14px; }
+    .filter-bar .search-box input { border: none; outline: none; font-family: var(--font-body); font-size: 14px; flex: 1; background: none; color: var(--text); }
+    .filter-chip { padding: 7px 16px; border: 2px solid var(--border); border-radius: 99px; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--surface); color: var(--text-muted); transition: all 0.2s; white-space: nowrap; }
+    .filter-chip.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+    .product-card-inner { padding: 16px; }
+    .product-img-wrap { width: 100%; height: 180px; background: var(--surface2); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 60px; margin-bottom: 14px; overflow: hidden; }
+    .product-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .product-price-tag { font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--primary); }
+    .product-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+    .product-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.5; }
+    .product-seller-info { display: flex; align-items: center; gap: 8px; padding: 10px 0 0; border-top: 1px solid var(--border); }
+    .product-actions { display: flex; gap: 8px; margin-top: 12px; }
+    /* Sell page */
+    .sell-form { max-width: 620px; margin: 0 auto; }
+    .photo-upload { border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface2); }
+    .photo-upload:hover { border-color: var(--primary); background: var(--primary-light); }
+    .photo-upload .icon { font-size: 40px; margin-bottom: 8px; }
+    .photo-upload p { color: var(--text-muted); font-size: 14px; }
+    .photo-preview { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .photo-thumb { width: 80px; height: 80px; border-radius: var(--radius-sm); background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  </style>
+</head>
+<body>
+<div class="main-content-full" style="padding:24px;max-width:1200px;margin:var(--nav-h) auto 0">
+  <!-- Header -->
+  <div class="market-header">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <h2>🛒 Marketplace</h2>
+        <p>Buy & sell stationery, calculators, textbooks and study materials within campus</p>
+      </div>
+      <div class="market-actions">
+        <button class="btn btn-accent" onclick="switchView('sell')">+ Sell Something</button>
+        <button class="btn btn-outline" style="color:#fff;border-color:#fff" onclick="switchView('buy')">Browse Items</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" style="margin-bottom:20px;max-width:320px">
+    <button class="tab-btn active" id="tabBuy" onclick="switchView('buy')">🛍️ Buy</button>
+    <button class="tab-btn" id="tabSell" onclick="switchView('sell')">📦 Sell</button>
+    <button class="tab-btn" id="tabMyListings" onclick="switchView('mylistings')">📋 My Listings</button>
+  </div>
+
+  <!-- BUY VIEW -->
+  <div id="buyView">
+    <div class="filter-bar">
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" id="productSearch" placeholder="Search products..." oninput="filterProducts()" />
+      </div>
+      <div class="filter-chip active" onclick="setCategory('all',this)">All</div>
+      <div class="filter-chip" onclick="setCategory('calculator',this)">🔢 Calculators</div>
+      <div class="filter-chip" onclick="setCategory('books',this)">📖 Books</div>
+      <div class="filter-chip" onclick="setCategory('stationery',this)">✏️ Stationery</div>
+      <div class="filter-chip" onclick="setCategory('electronics',this)">💻 Electronics</div>
+      <div class="filter-chip" onclick="setCategory('notes',this)">📄 Notes</div>
+    </div>
+    <div class="products-grid" id="productsGrid"></div>
+  </div>
+
+  <!-- SELL VIEW -->
+  <div id="sellView" class="hidden">
+    <div class="sell-form">
+      <h3 style="margin-bottom:20px">📦 List a Product</h3>
+      <div class="input-group">
+        <label>Product Name</label>
+        <input class="input-field" id="sellName" placeholder="e.g. Casio FX-991EX Scientific Calculator" />
+      </div>
+      <div class="grid-2" style="gap:12px">
+        <div class="input-group">
+          <label>Category</label>
+          <select class="input-field" id="sellCategory">
+            <option>Calculator</option><option>Books</option><option>Stationery</option><option>Electronics</option><option>Notes</option><option>Other</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Price (₹)</label>
+          <input class="input-field" type="number" id="sellPrice" placeholder="e.g. 500" />
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Description</label>
+        <textarea class="input-field" style="min-height:100px;resize:vertical" id="sellDesc" placeholder="Condition, usage duration, reason for selling..."></textarea>
+      </div>
+      <div class="input-group">
+        <label>Contact Details</label>
+        <input class="input-field" id="sellContact" placeholder="Phone number or college email" />
+      </div>
+      <div class="input-group">
+        <label>Product Photos</label>
+        <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+          <div class="icon">📸</div>
+          <p>Click to upload product photos</p>
+          <p style="font-size:12px;margin-top:4px">Supports JPG, PNG (max 5MB each)</p>
+          <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="previewPhotos(this)" />
+        </div>
+        <div class="photo-preview" id="photoPreview">
+          <div class="photo-thumb">📷</div>
+          <div class="photo-thumb">📷</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn btn-primary" onclick="submitListing()" style="flex:1">🚀 List Product</button>
+        <button class="btn btn-outline" onclick="switchView('buy')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY LISTINGS -->
+  <div id="mylistingsView" class="hidden">
+    <div id="myListingsGrid" class="products-grid"></div>
+  </div>
+</div>
+
+<!-- Product Detail Modal -->
+<div id="productModal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:560px">
+    <button class="modal-close" onclick="closeModal('productModal')">×</button>
+    <div id="productModalContent"></div>
+  </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+<script src="utils.js"></script>
+<script>
+  const user = Auth.requireAuth();
+  buildNav('marketplace');
+
+  let allListings = [];
+  let activeCategory = 'all';
+  let selectedPhotos = [];
+
+  function authHeader() {
+    const token = localStorage.getItem('edubond_access') || '';
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  async function apiRequest(url, options = {}) {
+    const headers = { 'Content-Type': 'application/json', ...authHeader(), ...(options.headers || {}) };
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 401) {
+      showToast('Session expired. Please login again.', 'warning');
+      Auth.logout();
+      throw new Error('Unauthorized');
+    }
+    const isJson = (res.headers.get('content-type') || '').includes('application/json');
+    let data = null;
+    let rawText = '';
+    if (isJson) {
+      data = await res.json();
+    } else {
+      rawText = (await res.text() || '').trim();
+    }
+    if (!res.ok) throw new Error(data?.error || data?.detail || rawText || `Request failed (${res.status})`);
+    return data;
+  }
+
+  function productVisual(p, h = 180) {
+    if (p.photo) return `<img src="${p.photo}" alt="${p.name}" loading="lazy" />`;
+    return `<span style="font-size:${Math.round(h/3)}px">${p.icon || '📦'}</span>`;
+  }
+
+  function renderProducts(list, containerId = 'productsGrid') {
+    const grid = document.getElementById(containerId);
+    if (!list.length) { grid.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No products found</p></div>'; return; }
+    grid.innerHTML = list.map(p => `
+      <div class="card product-card" onclick="showProduct(${p.id})">
+        <div class="product-img-wrap">${productVisual(p, 180)}</div>
+        <div class="product-card-inner" style="padding:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span class="badge badge-${p.condition==='Like New'?'success':'primary'}">${p.condition}</span>
+            <span class="badge badge-accent">${p.category}</span>
+          </div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-desc">${p.desc.substring(0,80)}...</div>
+          <div class="product-price-tag">₹${p.price}</div>
+          <div class="product-seller-info">
+            <div class="avatar" style="width:28px;height:28px;font-size:11px">${p.sellerInit}</div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600">${p.seller}</div><div style="font-size:11px;color:var(--text-muted)">${p.branch}</div></div>
+          </div>
+          <div class="product-actions">
+            <button class="btn btn-primary btn-sm" style="flex:1" onclick="event.stopPropagation();openChat('${p.seller}','${p.sellerInit}','About: ${p.name}','${p.contact}',true)">💬 Buy / Chat</button>
+            ${containerId === 'myListingsGrid' ? `<button class="btn btn-outline btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="event.stopPropagation();markAsSold(${p.id})">✅ Sold</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function showProduct(id) {
+    const p = allListings.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('productModalContent').innerHTML = `
+      <div class="product-img-wrap" style="height:200px;font-size:80px;margin-bottom:16px">${productVisual(p, 200)}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span class="badge badge-${p.condition==='Like New'?'success':'primary'}">${p.condition}</span>
+        <span class="badge badge-accent">${p.category}</span>
+      </div>
+      <h3 style="margin-bottom:4px">${p.name}</h3>
+      <div class="product-price-tag" style="margin-bottom:12px">₹${p.price}</div>
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">${p.desc}</p>
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:8px">Seller Info</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="avatar">${p.sellerInit}</div>
+          <div><div style="font-weight:600">${p.seller}</div><div style="font-size:13px;color:var(--text-muted)">${p.contact}</div></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" style="flex:1" onclick="closeModal('productModal');openChat('${p.seller}','${p.sellerInit}','Interested in: ${p.name} (₹${p.price})','${p.contact}',true)">💬 Chat with Seller</button>
+        <button class="btn btn-outline" onclick="closeModal('productModal')">Close</button>
+      </div>
+    `;
+    openModal('productModal');
+  }
+
+  function filterProducts() {
+    const q = document.getElementById('productSearch').value.toLowerCase();
+    const filtered = allListings.filter(p =>
+      (activeCategory === 'all' || p.category === activeCategory) &&
+      (p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q))
+    );
+    renderProducts(filtered);
+  }
+
+  function setCategory(cat, el) {
+    activeCategory = cat;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    filterProducts();
+  }
+
+  function switchView(view) {
+    ['buy','sell','mylistings'].forEach(v => {
+      document.getElementById(v+'View')?.classList.toggle('hidden', v !== view);
+      document.getElementById('tab'+v.charAt(0).toUpperCase()+v.slice(1))?.classList.toggle('active', v === view);
+    });
+    if (view === 'mylistings') renderMyListings();
+  }
+
+  function renderMyListings() {
+    const userListings = allListings.filter(x => x.isOwner);
+    const grid = document.getElementById('myListingsGrid');
+    if (!userListings.length) {
+      grid.innerHTML = `<div class="empty-state"><div class="icon">📦</div><p>You haven't listed anything yet. Click "Sell Something" to start!</p><button class="btn btn-primary mt-3" onclick="switchView('sell')">+ List Now</button></div>`;
+      return;
+    }
+    renderProducts(userListings, 'myListingsGrid');
+  }
+
+  async function markAsSold(id) {
+    if (!confirm('Mark this product as sold and remove it from listings?')) return;
+    try {
+      await apiRequest(`/api/marketplace/listings/${id}/`, { method: 'DELETE' });
+      showToast('Listing marked as sold ✅', 'success');
+      await loadListings();
+      renderMyListings();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  function previewPhotos(input) {
+    const preview = document.getElementById('photoPreview');
+    preview.innerHTML = '';
+    selectedPhotos = [];
+    Array.from(input.files).slice(0, 5).forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxW = 1280;
+          const maxH = 1280;
+          const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
+          canvas.width = Math.round(img.width * ratio);
+          canvas.height = Math.round(img.height * ratio);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.78);
+          selectedPhotos.push(compressed);
+          const div = document.createElement('div');
+          div.className = 'photo-thumb';
+          div.style.background = `url(${compressed}) center/cover`;
+          preview.appendChild(div);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+    showToast(`${input.files.length} photo(s) selected`, 'success');
+  }
+
+  async function submitListing() {
+    const name = document.getElementById('sellName').value.trim();
+    const price = document.getElementById('sellPrice').value;
+    const desc = document.getElementById('sellDesc').value.trim();
+    const contact = document.getElementById('sellContact').value.trim();
+    const category = document.getElementById('sellCategory').value.toLowerCase();
+    if (!name || !price || !desc || !contact) return showToast('Please fill all fields!', 'error');
+    try {
+      await apiRequest('/api/marketplace/listings/', {
+        method: 'POST',
+        body: JSON.stringify({
+          name,
+          category,
+          price: parseInt(price, 10),
+          description: desc,
+          contact,
+          condition: 'Like New',
+          photo: selectedPhotos[0] || ''
+        })
+      });
+    } catch (err) {
+      showToast(err.message, 'error');
+      return;
+    }
+    selectedPhotos = [];
+    document.getElementById('photoInput').value = '';
+    document.getElementById('sellName').value = '';
+    document.getElementById('sellPrice').value = '';
+    document.getElementById('sellDesc').value = '';
+    document.getElementById('sellContact').value = '';
+    document.getElementById('photoPreview').innerHTML = '<div class="photo-thumb">📷</div><div class="photo-thumb">📷</div>';
+    showToast('Product listed successfully! 🎉', 'success');
+    await loadListings();
+    switchView('mylistings');
+  }
+
+  function mapApiListing(p) {
+    return {
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      price: p.price,
+      desc: p.description || '',
+      contact: p.contact || '',
+      seller: p.seller_name || p.seller || 'Student',
+      sellerInit: p.seller_initials || p.seller_init || 'ST',
+      icon: { calculator:'🔢', books:'📖', stationery:'✏️', electronics:'💻', notes:'📄', other:'📦' }[p.category] || '📦',
+      condition: p.condition || 'Like New',
+      branch: p.seller_branch || p.branch || '',
+      photo: p.photo || '',
+      isOwner: !!p.is_owner
+    };
+  }
+
+  async function loadListings() {
+    try {
+      const data = await apiRequest('/api/marketplace/listings/', { method: 'GET' });
+      allListings = (Array.isArray(data) ? data : []).map(mapApiListing);
+      filterProducts();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  // Initial render
+  loadListings();
+</script>
+</body>
+</html>

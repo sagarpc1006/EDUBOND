@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduBond – Home</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .home-layout { display: grid; grid-template-columns: 280px 1fr 280px; gap: 20px; padding: 24px; max-width: 1300px; margin: var(--nav-h) auto 0; }
+    .left-sidebar, .right-sidebar { position: sticky; top: calc(var(--nav-h) + 24px); height: fit-content; }
+    .profile-mini { text-align: center; padding: 24px 16px; }
+    .profile-mini .avatar-xl { margin: 0 auto 12px; }
+    .profile-mini .name { font-weight: 700; font-size: 18px; font-family: var(--font-head); }
+    .profile-mini .sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+    .profile-mini .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+    .stat-item { background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 6px; text-align: center; }
+    .stat-item .num { font-weight: 700; font-family: var(--font-head); font-size: 18px; color: var(--primary); }
+    .stat-item .lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .quick-nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: var(--radius-sm);
+      cursor: pointer; font-size: 14px; font-weight: 500;
+      color: var(--text); transition: all 0.2s;
+      margin-bottom: 4px;
+    }
+    .quick-nav-item:hover { background: var(--primary-light); color: var(--primary); }
+    .quick-nav-item .icon { font-size: 18px; }
+    .feed-section { min-height: 200px; }
+    .create-post {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
+      margin-bottom: 16px; cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+    .create-post:hover { box-shadow: var(--shadow); }
+    .create-post-input {
+      flex: 1; background: var(--surface2);
+      border-radius: 99px; padding: 10px 18px;
+      font-size: 14px; color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .post-type-btns { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .post-type-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border: none; background: none; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: var(--radius-sm); color: var(--text-muted); font-family: var(--font-body); transition: all 0.2s; }
+    .post-type-btn:hover { background: var(--surface2); }
+    .event-card { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 12px; }
+    .event-date { background: var(--primary); color: #fff; border-radius: var(--radius-sm); padding: 8px 12px; text-align: center; min-width: 52px; }
+    .event-date .day { font-size: 22px; font-weight: 800; font-family: var(--font-head); line-height: 1; }
+    .event-date .month { font-size: 11px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.05em; }
+    .event-info .title { font-weight: 600; font-size: 14px; }
+    .event-info .sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .suggest-card { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .suggest-card .info .name { font-weight: 600; font-size: 14px; }
+    .suggest-card .info .sub { font-size: 12px; color: var(--text-muted); }
+    .tag { display: inline-block; background: var(--primary-light); color: var(--primary); border-radius: 99px; padding: 3px 10px; font-size: 12px; font-weight: 600; margin: 2px; }
+    @media (max-width: 1100px) { .home-layout { grid-template-columns: 240px 1fr; } .right-sidebar { display: none; } }
+    @media (max-width: 768px) { .home-layout { grid-template-columns: 1fr; } .left-sidebar { display: none; } }
+    
+    /* Create post modal */
+    .modal-textarea { width: 100%; min-height: 120px; border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; font-family: var(--font-body); font-size: 14px; resize: vertical; outline: none; }
+    .modal-textarea:focus { border-color: var(--primary); }
+    .post-tag-select { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .post-tag-opt { padding: 5px 14px; border: 2px solid var(--border); border-radius: 99px; font-size: 13px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+    .post-tag-opt.sel { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+    .event-extra { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<div class="home-layout">
+  <!-- Left Sidebar -->
+  <div class="left-sidebar">
+    <div class="card" style="margin-bottom:16px">
+      <div class="profile-mini">
+        <div class="avatar-xl" id="miniAvatarInitials" style="margin:0 auto 12px">U</div>
+        <div class="name" id="miniName">User</div>
+        <div class="sub" id="miniSub">CSE • 3rd Year</div>
+        <div class="sub mt-1" style="color:var(--primary);font-weight:600" id="miniCollege">Indira ICEM</div>
+        <div class="stats">
+          <div class="stat-item"><div class="num" id="homeConnectionsCount">0</div><div class="lbl">Connections</div></div>
+          <div class="stat-item"><div class="num" id="homePostsCount">0</div><div class="lbl">Posts</div></div>
+          <div class="stat-item"><div class="num" id="homeNotesCount">0</div><div class="lbl">Notes</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Quick Access</div>
+      <a href="marketplace.html" class="quick-nav-item"><span class="icon">🛒</span> Marketplace</a>
+      <a href="studyhub.html" class="quick-nav-item"><span class="icon">📚</span> Study Hub</a>
+      <a href="hostel.html" class="quick-nav-item"><span class="icon">🏨</span> Hostel Desk</a>
+      <a href="profile.html" class="quick-nav-item"><span class="icon">👤</span> My Profile</a>
+      <div class="quick-nav-item" onclick="openModal('grievanceModal')"><span class="icon">📢</span> Send Grievance</div>
+      <div class="quick-nav-item" onclick="Auth.logout()" style="color:var(--danger)"><span class="icon">🚪</span> Logout</div>
+    </div>
+  </div>
+
+  <!-- Main Feed -->
+  <div class="feed-section">
+    <!-- Create Post -->
+    <div class="card create-post-card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="avatar" id="feedAvatar">U</div>
+        <div class="create-post-input" onclick="openModal('createPostModal')" style="cursor:pointer">Share your experience, roadmap or thoughts...</div>
+      </div>
+      <div class="post-type-btns">
+        <button class="post-type-btn" onclick="openCreatePost('general')">📝 Write Post</button>
+        <button class="post-type-btn" onclick="openCreatePost('roadmap')">🗺️ Share Roadmap</button>
+        <button class="post-type-btn" onclick="openCreatePost('event')">📅 Announce Event</button>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="filterFeed('all',this)">All Posts</button>
+      <button class="btn btn-outline btn-sm" onclick="filterFeed('roadmap',this)">🗺️ Roadmaps</button>
+      <button class="btn btn-outline btn-sm" onclick="filterFeed('event',this)">📅 Events</button>
+      <button class="btn btn-outline btn-sm" onclick="filterFeed('experience',this)">💼 Experiences</button>
+      <button class="btn btn-outline btn-sm" onclick="filterFeed('tip',this)">💡 Tips</button>
+    </div>
+
+    <!-- Posts Feed -->
+    <div id="feedContainer"></div>
+  </div>
+
+  <!-- Right Sidebar -->
+  <div class="right-sidebar">
+    <!-- Upcoming Events -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px">Upcoming Events 📅</div>
+      <div id="upcomingEventsList"></div>
+    </div>
+
+    <!-- People to Connect -->
+    <div class="card">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px">People to Connect</div>
+      <div id="suggestPeople"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Post Modal -->
+<div id="createPostModal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:560px">
+    <button class="modal-close" onclick="closeModal('createPostModal')">×</button>
+    <h3 style="margin-bottom:16px">Create Post</h3>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div class="avatar" id="postModalAvatar">U</div>
+      <div>
+        <div class="font-bold" id="postModalName">User</div>
+        <div class="text-sm text-muted" id="postModalSub">CSE • 3rd Year</div>
+      </div>
+    </div>
+    <div class="post-tag-select">
+      <div class="post-tag-opt sel" onclick="toggleTag(this)">💭 General</div>
+      <div class="post-tag-opt" onclick="toggleTag(this)">🗺️ Roadmap</div>
+      <div class="post-tag-opt" onclick="toggleTag(this)">💼 Experience</div>
+      <div class="post-tag-opt" onclick="toggleTag(this)">💡 Tip</div>
+      <div class="post-tag-opt" onclick="toggleTag(this)">📅 Event</div>
+    </div>
+    <textarea class="modal-textarea" id="postContent" placeholder="Share your thoughts, experience, or roadmap with the community..."></textarea>
+    <div id="eventExtraFields" class="event-extra hidden">
+      <div class="grid-2" style="gap:10px">
+        <div class="input-group" style="margin-bottom:0">
+          <label>Event Date</label>
+          <input type="date" class="input-field" id="eventDateInput" />
+        </div>
+        <div class="input-group" style="margin-bottom:0">
+          <label>Event Logo</label>
+          <select class="input-field" id="eventLogoInput">
+            <option value="🎉">🎉 Celebration</option>
+            <option value="💻">💻 Tech</option>
+            <option value="🏆">🏆 Competition</option>
+            <option value="📚">📚 Academic</option>
+            <option value="🎭">🎭 Cultural</option>
+            <option value="⚽">⚽ Sports</option>
+            <option value="🧠">🧠 Workshop</option>
+            <option value="📢">📢 Announcement</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
+      <button class="btn btn-outline" onclick="closeModal('createPostModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitPost()">Post ✨</button>
+    </div>
+  </div>
+</div>
+
+<!-- Grievance Modal -->
+<div id="grievanceModal" class="modal-overlay hidden">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('grievanceModal')">×</button>
+    <h3 style="margin-bottom:4px">Send Grievance 📢</h3>
+    <p class="text-muted text-sm" style="margin-bottom:20px">Report any issue to the college administration</p>
+    <div class="input-group">
+      <label>Category</label>
+      <select class="input-field" id="grievanceCategory">
+        <option>Academic Issue</option>
+        <option>Hostel Problem</option>
+        <option>Faculty Complaint</option>
+        <option>Infrastructure</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>Subject</label>
+      <input class="input-field" id="grievanceSubject" placeholder="Brief subject of grievance" />
+    </div>
+    <div class="input-group">
+      <label>Description</label>
+      <textarea class="modal-textarea" id="grievanceDescription" style="min-height:100px" placeholder="Describe your issue in detail..."></textarea>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
+      <input type="checkbox" id="anonymousCheck" />
+      <label for="anonymousCheck" style="font-size:13px;cursor:pointer">Submit anonymously</label>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="submitGrievance()">Submit Grievance</button>
+  </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="utils.js"></script>
+<script>
+  const user = Auth.requireAuth();
+  if (!user) window.location.href = 'index.html';
+  buildNav('home');
+
+  const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  function renderAvatar(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (user.avatar) {
+      el.textContent = '';
+      el.style.background = `url(${user.avatar}) center/cover`;
+    } else {
+      el.textContent = initials;
+      el.style.background = '';
+    }
+  }
+  renderAvatar('miniAvatarInitials');
+  document.getElementById('miniName').textContent = user.name;
+  document.getElementById('miniSub').textContent = `${user.branch} • ${user.year}`;
+  document.getElementById('miniCollege').textContent = user.college;
+  renderAvatar('feedAvatar');
+  renderAvatar('postModalAvatar');
+  document.getElementById('postModalName').textContent = user.name;
+  document.getElementById('postModalSub').textContent = `${user.branch} • ${user.year}`;
+
+  const POSTS = [];
+  const DEFAULT_UPCOMING_EVENTS = [
+    { title: 'Tech Fest 2025', date: '2026-03-15', sub: 'Main Auditorium' },
+    { title: 'Hackathon 2025', date: '2026-03-20', sub: 'Computer Lab' },
+    { title: 'Alumni Meet', date: '2026-03-28', sub: 'Seminar Hall' },
+    { title: 'Cultural Night', date: '2026-04-05', sub: 'Open Ground' },
+  ];
+  const commentCache = {};
+  let activeFeedFilter = 'all';
+  let openCommentPostId = null;
+
+  function authHeader() {
+    const token = localStorage.getItem('edubond_access') || '';
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  async function apiRequest(url, options = {}) {
+    const headers = { 'Content-Type': 'application/json', ...authHeader(), ...(options.headers || {}) };
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 401) {
+      showToast('Session expired. Please login again.', 'warning');
+      Auth.logout();
+      throw new Error('Unauthorized');
+    }
+    const isJson = (res.headers.get('content-type') || '').includes('application/json');
+    const data = isJson ? await res.json() : null;
+    if (!res.ok) throw new Error(data?.error || data?.detail || 'Request failed');
+    return data;
+  }
+
+  function timeAgo(iso) {
+    const t = new Date(iso).getTime();
+    if (!t) return 'Just now';
+    const diff = Date.now() - t;
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return 'Just now';
+    if (min < 60) return `${min}m ago`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr}h ago`;
+    const day = Math.floor(hr / 24);
+    return `${day}d ago`;
+  }
+
+  function mapPost(p) {
+    return {
+      id: p.id,
+      author: p.author_name || 'User',
+      authorEmail: (p.author_email || '').toLowerCase(),
+      initials: p.author_initials || 'U',
+      sub: p.sub || '',
+      tag: p.tag || 'general',
+      content: p.content || '',
+      likes: Number(p.like_count || 0),
+      comments: Number(p.comment_count || 0),
+      liked: !!p.liked,
+      time: timeAgo(p.created_at),
+      authorAvatar: p.author_avatar || '',
+      eventDate: p.event_date || '',
+      eventLogo: p.event_logo || ''
+    };
+  }
+
+  async function loadPosts(tag = 'all') {
+    const data = await apiRequest(`/api/community/posts/?tag=${encodeURIComponent(tag)}`, { method: 'GET' });
+    POSTS.splice(0, POSTS.length, ...(Array.isArray(data) ? data.map(mapPost) : []));
+    renderFeed(activeFeedFilter);
+    renderUpcomingEvents();
+  }
+
+  async function refreshHomeStats() {
+    try {
+      const [me, myPosts, myNotes] = await Promise.all([
+        apiRequest('/api/auth/profile/', { method: 'GET' }),
+        apiRequest('/api/community/posts/?mine=1', { method: 'GET' }),
+        apiRequest('/api/studyhub/materials/?mine=1', { method: 'GET' }),
+      ]);
+      document.getElementById('homeConnectionsCount').textContent = String(me?.connection_count ?? 0);
+      document.getElementById('homePostsCount').textContent = String(Array.isArray(myPosts) ? myPosts.length : 0);
+      document.getElementById('homeNotesCount').textContent = String(Array.isArray(myNotes) ? myNotes.length : 0);
+    } catch {
+      // Keep current values if request fails.
+    }
+  }
+
+  async function loadComments(postId) {
+    const data = await apiRequest(`/api/community/posts/${postId}/comments/`, { method: 'GET' });
+    commentCache[postId] = Array.isArray(data)
+      ? data.map(c => ({ name: c.author_name || 'User', text: c.content || '' }))
+      : [];
+  }
+
+  function renderFeed(filter) {
+    const container = document.getElementById('feedContainer');
+    const filtered = filter === 'all' ? POSTS : POSTS.filter(p => p.tag === filter);
+    container.innerHTML = filtered.map(post => `
+      ${(() => {
+        const isOwn = (post.authorEmail || '').toLowerCase() === (user.email || '').toLowerCase();
+        const displayAuthor = isOwn ? user.name : post.author;
+        const displayInitials = isOwn
+          ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+          : post.initials;
+        const displayAvatar = isOwn ? (user.avatar || post.authorAvatar || '') : (post.authorAvatar || '');
+        const otherKey = isOwn
+          ? (post.authorEmail || user.email || displayAuthor)
+          : (post.authorEmail || getPerson(displayAuthor)?.email || displayAuthor);
+        const avatarHtml = displayAvatar
+          ? `<img src="${displayAvatar}" alt="${displayAuthor}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`
+          : displayInitials;
+        const liked = !!post.liked;
+        const canRemove = isOwn || !!user.is_staff || !!user.is_superuser;
+        const extraComments = commentCache[post.id] || [];
+        const eventInfo = post.tag === 'event' && (post.eventDate || post.eventLogo)
+          ? `<div style="margin:8px 0 4px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)">
+              <span style="font-size:16px">${post.eventLogo || '📅'}</span>
+              <span>${post.eventDate ? new Date(post.eventDate).toLocaleDateString() : 'Date not set'}</span>
+            </div>`
+          : '';
+        return `
+      <div class="card post-card" id="post-${post.id}">
+        <div class="post-header">
+          <div class="avatar" style="overflow:hidden">${avatarHtml}</div>
+          <div class="info" style="flex:1">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div class="author" style="cursor:pointer;text-decoration:underline" onclick="event.stopPropagation();viewProfile('${post.authorEmail || displayAuthor}')">${displayAuthor}</div>
+              <span class="badge badge-${post.tag === 'roadmap' ? 'primary' : post.tag === 'event' ? 'accent' : post.tag === 'experience' ? 'success' : 'primary'}">${post.tag}</span>
+            </div>
+            <div class="meta">${post.sub} • ${post.time}</div>
+          </div>
+        </div>
+        <div class="post-body" style="white-space:pre-line">${post.content}</div>
+        ${eventInfo}
+        <div class="post-actions" style="position:relative">
+          <button class="post-action-btn ${liked ? 'liked' : ''}" onclick="toggleLike(${post.id})">
+            ${liked ? '❤️' : '🤍'} <span id="likes-${post.id}">${post.likes}</span>
+          </button>
+          <div class="comment-dropdown-wrap" style="position:relative">
+            <button class="post-action-btn" onclick="event.stopPropagation();toggleComments(${post.id})">💬 ${post.comments}</button>
+            ${openCommentPostId === post.id ? `
+            <div class="comment-dropdown" onclick="event.stopPropagation()" style="position:absolute;top:36px;left:0;width:min(360px,80vw);background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:10px;z-index:20">
+              <div style="max-height:220px;overflow:auto;margin-bottom:8px">
+                ${extraComments.length ? extraComments.map(c => `
+                  <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px">
+                    <div class="avatar" style="width:24px;height:24px;font-size:10px">${(c.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}</div>
+                    <div style="background:var(--surface2);padding:7px 9px;border-radius:10px;flex:1">
+                      <div style="font-size:12px;font-weight:700">${c.name}</div>
+                      <div style="font-size:13px">${c.text}</div>
+                    </div>
+                  </div>
+                `).join('') : `<div class="text-sm text-muted">No comments yet.</div>`}
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="comment-input-${post.id}" class="input-field" placeholder="Write a comment..." style="margin:0" />
+                <button class="btn btn-primary btn-sm" onclick="addComment(${post.id})">Send</button>
+              </div>
+            </div>
+            ` : ''}
+          </div>
+          <button class="post-action-btn" onclick="openChat('${displayAuthor}','${displayInitials}','${post.sub}','${otherKey}')">✉️ Connect</button>
+          <button class="post-action-btn" style="margin-left:auto" onclick="showToast('Post shared!','success')">↗️ Share</button>
+          ${canRemove ? `<button class="post-action-btn" style="color:var(--danger)" onclick="removePost(${post.id})">🗑 Remove</button>` : ''}
+        </div>
+      </div>
+    `; })()}
+    `).join('') || `<div class="empty-state"><div class="icon">📭</div><p>No ${filter} posts yet. Be the first!</p></div>`;
+  }
+
+  function renderUpcomingEvents() {
+    const box = document.getElementById('upcomingEventsList');
+    if (!box) return;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const uploadedEvents = POSTS
+      .filter(p => p.tag === 'event' && p.eventDate)
+      .map(p => ({
+        title: p.content.split('\n')[0].replace(/^📅\s*/,'').trim().slice(0, 60) || 'Student Event',
+        date: p.eventDate,
+        sub: `${p.author || 'Student'} • ${p.eventLogo || '📅'}`
+      }));
+
+    const merged = [...uploadedEvents, ...DEFAULT_UPCOMING_EVENTS]
+      .filter(e => {
+        const d = new Date(e.date);
+        d.setHours(0, 0, 0, 0);
+        return !Number.isNaN(d.getTime()) && d >= today;
+      })
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(0, 6);
+
+    if (!merged.length) {
+      box.innerHTML = `<div class="text-sm text-muted">No upcoming events.</div>`;
+      return;
+    }
+
+    box.innerHTML = merged.map((e, idx) => {
+      const d = new Date(e.date);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = d.toLocaleString('en-US', { month: 'short' });
+      const accent = idx % 4 === 3 ? ' style="background:var(--accent)"' : '';
+      return `
+        <div class="event-card">
+          <div class="event-date"${accent}><div class="day">${day}</div><div class="month">${month}</div></div>
+          <div class="event-info"><div class="title">${e.title}</div><div class="sub">${e.sub}</div></div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function filterFeed(type, btn) {
+    activeFeedFilter = type;
+    document.querySelectorAll('.feed-section .btn').forEach(b => { b.className = 'btn btn-outline btn-sm'; });
+    btn.className = 'btn btn-primary btn-sm';
+    loadPosts(type).catch(err => showToast(err.message, 'error'));
+  }
+
+  async function toggleLike(id) {
+    try {
+      const data = await apiRequest(`/api/community/posts/${id}/like/`, { method: 'POST', body: '{}' });
+      const post = POSTS.find(p => p.id === id);
+      if (post) {
+        post.liked = !!data.liked;
+        post.likes = Number(data.like_count || 0);
+      }
+      renderFeed(activeFeedFilter);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function toggleComments(id) {
+    openCommentPostId = openCommentPostId === id ? null : id;
+    if (openCommentPostId === id) {
+      try { await loadComments(id); } catch (err) { showToast(err.message, 'error'); }
+    }
+    renderFeed(activeFeedFilter);
+  }
+
+  async function addComment(postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    const text = (input?.value || '').trim();
+    if (!text) return;
+    try {
+      await apiRequest(`/api/community/posts/${postId}/comments/`, {
+        method: 'POST',
+        body: JSON.stringify({ content: text })
+      });
+      await loadComments(postId);
+      const post = POSTS.find(p => p.id === postId);
+      if (post) post.comments = (commentCache[postId] || []).length;
+      renderFeed(activeFeedFilter);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.comment-dropdown-wrap') && openCommentPostId !== null) {
+      openCommentPostId = null;
+      renderFeed(activeFeedFilter);
+    }
+  });
+
+  function toggleTag(el) {
+    document.querySelectorAll('.post-tag-opt').forEach(e => e.classList.remove('sel'));
+    el.classList.add('sel');
+    const isEvent = (el.textContent || '').toLowerCase().includes('event');
+    document.getElementById('eventExtraFields').classList.toggle('hidden', !isEvent);
+  }
+
+  function openCreatePost(type = 'general') {
+    openModal('createPostModal');
+    const map = {
+      general: 'general',
+      roadmap: 'roadmap',
+      experience: 'experience',
+      tip: 'tip',
+      event: 'event'
+    };
+    const wanted = map[type] || 'general';
+    const opts = Array.from(document.querySelectorAll('.post-tag-opt'));
+    const found = opts.find(el => (el.textContent || '').toLowerCase().includes(wanted));
+    const fallback = opts[0];
+    toggleTag(found || fallback);
+  }
+
+  async function submitPost() {
+    const content = document.getElementById('postContent').value.trim();
+    if (!content) return showToast('Write something first!', 'error');
+    const selected = (document.querySelector('.post-tag-opt.sel')?.textContent || '').toLowerCase();
+    let tag = 'general';
+    if (selected.includes('roadmap')) tag = 'roadmap';
+    else if (selected.includes('experience')) tag = 'experience';
+    else if (selected.includes('tip')) tag = 'tip';
+    else if (selected.includes('event')) tag = 'event';
+
+    const eventDateVal = document.getElementById('eventDateInput').value;
+    const eventLogoVal = document.getElementById('eventLogoInput').value;
+    if (tag === 'event' && !eventDateVal) {
+      return showToast('Please select an event date', 'error');
+    }
+
+    try {
+      await apiRequest('/api/community/posts/', {
+        method: 'POST',
+        body: JSON.stringify({
+          tag,
+          content,
+          event_date: tag === 'event' ? eventDateVal : null,
+          event_logo: tag === 'event' ? eventLogoVal : ''
+        })
+      });
+    } catch (err) {
+      showToast(err.message, 'error');
+      return;
+    }
+    closeModal('createPostModal');
+    document.getElementById('postContent').value = '';
+    document.getElementById('eventDateInput').value = '';
+    document.getElementById('eventLogoInput').value = '🎉';
+    document.getElementById('eventExtraFields').classList.add('hidden');
+    const defaultTag = document.querySelector('.post-tag-opt');
+    document.querySelectorAll('.post-tag-opt').forEach(e => e.classList.remove('sel'));
+    if (defaultTag) defaultTag.classList.add('sel');
+    await loadPosts(activeFeedFilter);
+    await refreshHomeStats();
+    showToast('Post published! 🎉', 'success');
+  }
+
+  async function removePost(id) {
+    if (!confirm('Remove this post?')) return;
+    try {
+      await apiRequest(`/api/community/posts/${id}/`, { method: 'DELETE' });
+      await loadPosts(activeFeedFilter);
+      await refreshHomeStats();
+      showToast('Post removed.', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function submitGrievance() {
+    const category = document.getElementById('grievanceCategory').value;
+    const subject = document.getElementById('grievanceSubject').value.trim();
+    const description = document.getElementById('grievanceDescription').value.trim();
+    const is_anonymous = document.getElementById('anonymousCheck').checked;
+    if (!subject || !description) return showToast('Please fill grievance subject and description.', 'error');
+    try {
+      await apiRequest('/api/community/grievances/', {
+        method: 'POST',
+        body: JSON.stringify({ category, subject, description, is_anonymous }),
+      });
+      closeModal('grievanceModal');
+      document.getElementById('grievanceSubject').value = '';
+      document.getElementById('grievanceDescription').value = '';
+      document.getElementById('anonymousCheck').checked = false;
+      showToast('Grievance submitted to administration! 📢', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  // Suggestions
+  async function renderSuggestions() {
+    let people = [];
+    try {
+      const data = await apiRequest('/api/community/suggestions/', { method: 'GET' });
+      people = (Array.isArray(data) ? data : []).map(p => ({
+        name: p.name || p.email || 'User',
+        year: p.year || '',
+        branch: p.branch || '',
+        email: p.email || '',
+        avatar: p.profile_pic || '',
+      }));
+    } catch {
+      people = PEOPLE.filter(p => p.name !== user?.name).slice(0, 4).map(p => ({ ...p, avatar: p.avatar || '' }));
+    }
+    document.getElementById('suggestPeople').innerHTML = people.map(p => {
+      const ini = p.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+      const avatarHtml = p.avatar
+        ? `<img src="${p.avatar}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`
+        : ini;
+      return `<div class="suggest-card">
+        <div class="avatar" style="cursor:pointer;overflow:hidden" onclick="viewProfile('${p.email}')">${avatarHtml}</div>
+        <div class="info" style="flex:1;cursor:pointer" onclick="viewProfile('${p.email}')"><div class="name">${p.name}</div><div class="sub">${p.year} • ${p.branch}</div></div>
+        <button class="btn btn-outline btn-sm" onclick="openChat('${p.name}','${ini}','', '${p.email}')">+</button>
+      </div>`;
+    }).join('');
+  }
+
+  (async function init() {
+    try {
+      await loadPosts('all');
+      await refreshHomeStats();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+    await renderSuggestions();
+    setInterval(refreshHomeStats, 12000);
+  })();
+</script>
+</body>
+</html>

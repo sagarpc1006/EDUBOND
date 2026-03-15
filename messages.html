@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduBond - Messages</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .msg-wrap { max-width: 1200px; margin: var(--nav-h) auto 0; padding: 20px; }
+    .msg-grid { display: grid; grid-template-columns: 320px 1fr; gap: 16px; min-height: calc(100vh - var(--nav-h) - 40px); }
+    .thread-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: auto; }
+    .thread-head { padding: 14px 16px; border-bottom: 1px solid var(--border); font-weight: 700; }
+    .req-wrap { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .req-title { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .req-card { border: 1px solid var(--border); border-radius: 10px; padding: 8px; margin-bottom: 8px; background: var(--surface2); }
+    .req-line { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .req-actions { margin-top: 8px; display: flex; gap: 6px; }
+    .thread-item { display: flex; gap: 10px; padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--border); }
+    .thread-item:hover, .thread-item.active { background: var(--surface2); }
+    .thread-meta { min-width: 0; flex: 1; }
+    .thread-name { font-weight: 600; font-size: 14px; }
+    .thread-last { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; }
+    .chat-head { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: 700; }
+    .chat-head-title { min-width: 0; flex: 1; }
+    .chat-messages { flex: 1; padding: 14px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+    .chat-row { display: flex; }
+    .chat-row.me { justify-content: flex-end; }
+    .chat-msg-wrap { display: flex; flex-direction: column; }
+    .bubble { max-width: 70%; padding: 9px 12px; border-radius: 12px; font-size: 14px; line-height: 1.45; }
+    .chat-row.me .bubble { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+    .chat-row.other .bubble { background: var(--surface2); border-bottom-left-radius: 4px; }
+    .chat-time { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .chat-status { font-size: 11px; margin-left: 6px; }
+    .chat-status.read { color: #2563eb; }
+    .chat-actions { display: flex; gap: 8px; margin-top: 4px; font-size: 11px; }
+    .chat-action { cursor: pointer; color: var(--text-muted); }
+    .chat-action:hover { color: var(--primary); text-decoration: underline; }
+    .chat-input-bar { border-top: 1px solid var(--border); padding: 10px; display: flex; gap: 8px; }
+    .chat-empty { color: var(--text-muted); font-size: 14px; padding: 18px; }
+    @media (max-width: 900px) { .msg-grid { grid-template-columns: 1fr; } .thread-list { max-height: 260px; } }
+  </style>
+</head>
+<body>
+<div class="msg-wrap">
+  <div class="msg-grid">
+    <div class="thread-list">
+      <div class="thread-head">Messages</div>
+      <div id="requestBox"></div>
+      <div id="threadList"></div>
+    </div>
+    <div class="chat-panel">
+      <div class="chat-head">
+        <div class="chat-head-title" id="chatHead">Select a conversation</div>
+        <button class="btn btn-outline btn-sm hidden" id="deleteThreadBtn" onclick="deleteActiveThread()">Delete Chat</button>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-empty">Choose a thread from the left to start chatting.</div>
+      </div>
+      <div class="chat-input-bar">
+        <input id="chatInput" class="input-field" style="margin:0" placeholder="Type your message..." />
+        <button class="btn btn-primary" id="sendBtn">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+<script src="utils.js"></script>
+<script>
+  const user = Auth.requireAuth();
+  buildNav('');
+
+  const meKey = String(user.email || user.username || user.name || 'user').trim().toLowerCase();
+  const meName = String(user.name || 'User').trim();
+  let threads = [];
+  let activeThread = null;
+  let pollTimer = null;
+  let connectionState = { incoming: [], outgoing: [], connections: [] };
+
+  function fmt(ts) {
+    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function statusTicks(message) {
+    if (!message) return '';
+    if (message.read_at) return '<span class="chat-status read">✓✓</span>';
+    if (message.delivered_at) return '<span class="chat-status">✓✓</span>';
+    return '<span class="chat-status">✓</span>';
+  }
+
+  function renderThreadList() {
+    const box = document.getElementById('threadList');
+    if (!threads.length) {
+      box.innerHTML = '<div class="chat-empty">No conversations yet.</div>';
+      return;
+    }
+    box.innerHTML = threads.map(t => `
+      <div class="thread-item ${activeThread?.id === t.id ? 'active' : ''}" onclick="openThread(${t.id})">
+        <div class="avatar" style="width:34px;height:34px;font-size:12px">${(t.other_name || 'U').split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase()}</div>
+        <div class="thread-meta">
+          <div class="thread-name">${t.other_name || 'User'}</div>
+          <div class="thread-last">${t.last_message?.content || 'Start chatting'}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderRequestBox() {
+    const box = document.getElementById('requestBox');
+    const incoming = connectionState.incoming || [];
+    const outgoing = connectionState.outgoing || [];
+    if (!incoming.length && !outgoing.length) {
+      box.innerHTML = '';
+      return;
+    }
+    box.innerHTML = `
+      ${incoming.length ? `
+        <div class="req-wrap">
+          <div class="req-title">Connection Requests</div>
+          ${incoming.map(r => `
+            <div class="req-card">
+              <div style="font-size:13px;font-weight:700">${r.from_name || r.from_key}</div>
+              <div class="req-line">${r.reason || 'Wants to connect'}</div>
+              <div class="req-actions">
+                <button class="btn btn-primary btn-sm" onclick="respondConnection(${r.id},'accept')">Accept</button>
+                <button class="btn btn-outline btn-sm" onclick="respondConnection(${r.id},'reject')">Reject</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      ${outgoing.length ? `
+        <div class="req-wrap">
+          <div class="req-title">Pending Sent</div>
+          ${outgoing.map(r => `
+            <div class="req-card">
+              <div style="font-size:13px;font-weight:700">${r.to_name || r.to_key}</div>
+              <div class="req-line">${r.reason || 'Connection request sent'}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    `;
+  }
+
+  function renderMessages(msgs) {
+    const head = document.getElementById('chatHead');
+    const box = document.getElementById('chatMessages');
+    const deleteBtn = document.getElementById('deleteThreadBtn');
+    if (!activeThread) {
+      head.textContent = 'Select a conversation';
+      deleteBtn.classList.add('hidden');
+      box.innerHTML = '<div class="chat-empty">Choose a thread from the left to start chatting.</div>';
+      return;
+    }
+    head.textContent = activeThread.other_name || 'Conversation';
+    deleteBtn.classList.remove('hidden');
+    if (!msgs.length) {
+      box.innerHTML = '<div class="chat-empty">No messages yet. Say hello 👋</div>';
+      return;
+    }
+    box.innerHTML = msgs.map(m => {
+      const mine = String(m.sender_key || '').toLowerCase() === meKey;
+      return `
+        <div class="chat-row ${mine ? 'me' : 'other'}">
+          <div class="chat-msg-wrap">
+            <div class="bubble">${m.content}</div>
+            <div class="chat-time">${fmt(m.created_at)}${mine ? statusTicks(m) : ''}</div>
+            ${mine ? `
+              <div class="chat-actions">
+                <span class="chat-action" onclick="editMessage(${m.id}, ${activeThread.id}, '${encodeURIComponent(m.content || '')}')">Edit</span>
+                <span class="chat-action" onclick="deleteMessage(${m.id}, ${activeThread.id})">Delete</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function fetchThreads() {
+    const res = await fetch(`/api/chat/threads/?me_key=${encodeURIComponent(meKey)}`);
+    if (!res.ok) throw new Error('threads failed');
+    threads = await res.json();
+    renderThreadList();
+  }
+
+  async function fetchConnections() {
+    const res = await fetch(`/api/chat/connections/?me_key=${encodeURIComponent(meKey)}`);
+    if (!res.ok) throw new Error('connections failed');
+    connectionState = await res.json();
+    renderRequestBox();
+  }
+
+  async function fetchMessages(threadId) {
+    const res = await fetch(`/api/chat/threads/${threadId}/messages/?me_key=${encodeURIComponent(meKey)}`);
+    if (!res.ok) throw new Error('messages failed');
+    return await res.json();
+  }
+
+  async function openThread(id) {
+    activeThread = threads.find(t => t.id === id) || null;
+    renderThreadList();
+    if (!activeThread) return;
+    const msgs = await fetchMessages(id);
+    renderMessages(msgs);
+    clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+      if (!activeThread) return;
+      const latest = await fetchMessages(activeThread.id);
+      renderMessages(latest);
+    }, 2500);
+  }
+
+  async function ensureTargetThread() {
+    const raw = sessionStorage.getItem('chatTarget');
+    if (!raw) return;
+    sessionStorage.removeItem('chatTarget');
+    const t = JSON.parse(raw);
+    const otherKey = String(t.otherKey || t.name || '').trim().toLowerCase().replace(/\s+/g, '_');
+    if (!otherKey || otherKey === meKey) return;
+
+    if (!t.bypassConnection) {
+      const reqRes = await fetch('/api/chat/connections/request/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from_key: meKey,
+          from_name: meName,
+          to_key: otherKey,
+          to_name: t.name || 'User',
+          reason: t.subject || 'Want to connect',
+        }),
+      });
+      if (!reqRes.ok) return;
+      const reqData = await reqRes.json();
+      if (!(reqData.connected || reqData.status === 'accepted')) {
+        showToast(`Connection request sent to ${t.name || 'user'}.`, 'warning');
+        await fetchConnections();
+        return;
+      }
+    }
+
+    const payload = {
+      me_key: meKey,
+      me_name: meName,
+      other_key: otherKey,
+      other_name: t.name || 'User',
+      subject: t.subject || '',
+    };
+    const threadRes = await fetch('/api/chat/threads/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!threadRes.ok) return;
+    const created = await threadRes.json();
+    await fetchThreads();
+    await openThread(created.id);
+  }
+
+  async function respondConnection(id, action) {
+    const res = await fetch(`/api/chat/connections/${id}/respond/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ me_key: meKey, action }),
+    });
+    if (!res.ok) {
+      showToast('Could not update request', 'error');
+      return;
+    }
+    const data = await res.json();
+    showToast(action === 'accept' ? 'Connection accepted' : 'Request rejected', action === 'accept' ? 'success' : 'warning');
+    await fetchConnections();
+    await fetchThreads();
+    if (action === 'accept' && data.thread_id) {
+      await openThread(data.thread_id);
+    }
+  }
+
+  async function sendCurrentMessage() {
+    const input = document.getElementById('chatInput');
+    const text = (input.value || '').trim();
+    if (!text || !activeThread) return;
+    input.value = '';
+    const res = await fetch(`/api/chat/threads/${activeThread.id}/messages/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ me_key: meKey, me_name: meName, content: text }),
+    });
+    if (!res.ok) {
+      showToast('Message failed to send', 'error');
+      return;
+    }
+    const msgs = await fetchMessages(activeThread.id);
+    renderMessages(msgs);
+    await fetchThreads();
+  }
+
+  async function editMessage(messageId, threadId, encodedContent) {
+    const currentContent = decodeURIComponent(encodedContent || '');
+    const content = prompt('Edit message', currentContent || '');
+    if (content === null) return;
+    const trimmed = content.trim();
+    if (!trimmed) {
+      showToast('Message cannot be empty', 'warning');
+      return;
+    }
+    const res = await fetch(`/api/chat/messages/${messageId}/`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ me_key: meKey, content: trimmed }),
+    });
+    if (!res.ok) {
+      showToast('Could not edit message', 'error');
+      return;
+    }
+    const msgs = await fetchMessages(threadId);
+    renderMessages(msgs);
+    await fetchThreads();
+  }
+
+  async function deleteMessage(messageId, threadId) {
+    if (!confirm('Delete this message?')) return;
+    const res = await fetch(`/api/chat/messages/${messageId}/?me_key=${encodeURIComponent(meKey)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      showToast('Could not delete message', 'error');
+      return;
+    }
+    const msgs = await fetchMessages(threadId);
+    renderMessages(msgs);
+    await fetchThreads();
+  }
+
+  async function deleteActiveThread() {
+    if (!activeThread) return;
+    if (!confirm(`Delete chat with ${activeThread.other_name || 'this user'}?`)) return;
+    const threadId = activeThread.id;
+    const res = await fetch(`/api/chat/threads/${threadId}/?me_key=${encodeURIComponent(meKey)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      showToast('Could not delete chat', 'error');
+      return;
+    }
+    activeThread = null;
+    clearInterval(pollTimer);
+    pollTimer = null;
+    await fetchThreads();
+    renderMessages([]);
+    showToast('Chat deleted', 'success');
+  }
+
+  document.getElementById('sendBtn').addEventListener('click', sendCurrentMessage);
+  document.getElementById('chatInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendCurrentMessage();
+  });
+
+  (async function init() {
+    try {
+      await fetchConnections();
+      await fetchThreads();
+      await ensureTargetThread();
+      setInterval(fetchConnections, 5000);
+    } catch {
+      showToast('Messages unavailable right now.', 'warning');
+    }
+  })();
+</script>
+</body>
+</html>

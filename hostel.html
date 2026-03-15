@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduBond – Hostel Desk</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .hostel-hero { background: linear-gradient(135deg, #7c3aed, #db2777); color: #fff; padding: 32px 24px; border-radius: var(--radius-lg); margin-bottom: 24px; }
+    .hostel-hero h2 { font-size: 26px; margin-bottom: 6px; }
+    .hostel-hero p { opacity: 0.85; font-size: 14px; }
+    .hostel-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+    .hostel-choice-card {
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: var(--radius-lg); padding: 32px 24px;
+      text-align: center; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .hostel-choice-photo { width: 100%; height: 140px; border-radius: var(--radius); object-fit: cover; margin-bottom: 16px; border: 1px solid var(--border); background: var(--surface2); }
+    .hostel-choice-card:hover, .hostel-choice-card.active { border-color: var(--primary); box-shadow: var(--shadow); }
+    .hostel-choice-card .icon { font-size: 56px; margin-bottom: 12px; }
+    .hostel-choice-card h3 { font-size: 20px; margin-bottom: 6px; }
+    .hostel-choice-card p { font-size: 14px; color: var(--text-muted); }
+    .hostel-choice-card.boys { border-color: #3b82f6; }
+    .hostel-choice-card.girls { border-color: #ec4899; }
+    .room-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .room-photo { height: 140px; background: var(--surface2); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 48px; border: 1px solid var(--border); }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .info-block { background: var(--surface2); border-radius: var(--radius-sm); padding: 16px; }
+    .info-block .label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 8px; }
+    .info-block .value { font-size: 15px; font-weight: 600; }
+    .warden-card { display: flex; align-items: center; gap: 14px; background: var(--primary-light); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
+    .warden-info .name { font-weight: 700; font-size: 16px; }
+    .warden-info .role { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .warden-info .contact { font-size: 14px; color: var(--primary); font-weight: 600; margin-top: 6px; }
+    .vacancy-meter { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
+    .meter-bar { height: 14px; background: var(--border); border-radius: 99px; overflow: hidden; margin: 10px 0; }
+    .meter-fill { height: 100%; border-radius: 99px; transition: width 0.8s ease; }
+    .faq-item { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 8px; }
+    .faq-q { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; font-weight: 600; font-size: 14px; background: var(--surface); transition: background 0.2s; }
+    .faq-q:hover { background: var(--surface2); }
+    .faq-a { padding: 12px 16px; font-size: 14px; color: var(--text-muted); border-top: 1px solid var(--border); background: var(--surface2); display: none; line-height: 1.7; }
+    .faq-a.open { display: block; }
+    .faq-add { background: var(--surface); border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 16px; text-align: center; cursor: pointer; margin-top: 8px; color: var(--text-muted); font-size: 14px; transition: all 0.2s; }
+    .faq-add:hover { border-color: var(--primary); color: var(--primary); }
+    .detail-hostel-photo { width: 100%; height: 220px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface2); margin-bottom: 16px; }
+    .warden-avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    @media (max-width: 640px) { .hostel-select-grid { grid-template-columns: 1fr; } .room-gallery { grid-template-columns: repeat(2,1fr); } .info-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="main-content-full" style="padding:24px;max-width:1000px;margin:var(--nav-h) auto 0">
+
+  <div class="hostel-hero">
+    <h2>🏨 Hostel Desk</h2>
+    <p>Room photos, warden contact, vacancy status, and a community FAQ for hostel residents</p>
+  </div>
+
+  <!-- Hostel Selection -->
+  <div id="hostelSelect">
+    <h3 style="margin-bottom:16px">Select Hostel</h3>
+    <div class="hostel-select-grid" id="hostelChoiceGrid"></div>
+  </div>
+
+  <!-- Hostel Detail -->
+  <div id="hostelDetail" class="hidden">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('hostelSelect').classList.remove('hidden');document.getElementById('hostelDetail').classList.add('hidden')">← Back</button>
+      <h3 id="hostelDetailTitle" style="font-size:20px">Boys' Hostel</h3>
+    </div>
+
+    <!-- Room Photos -->
+    <div class="card" style="margin-bottom:20px">
+      <h4 style="margin-bottom:14px">🛏️ Room Photos</h4>
+      <img id="detailHostelPhoto" class="detail-hostel-photo hidden" alt="Hostel photo" />
+      <div class="room-gallery" id="roomGallery">
+        <div class="room-photo">🛏️</div>
+        <div class="room-photo">🚿</div>
+        <div class="room-photo">🪑</div>
+        <div class="room-photo">📚</div>
+        <div class="room-photo">🍽️</div>
+        <div class="room-photo">🏃</div>
+      </div>
+      <p class="text-sm text-muted">Double-sharing rooms with study table, cupboard, and ceiling fan. Common bathrooms on each floor.</p>
+    </div>
+
+    <!-- Vacancy Status -->
+    <div class="vacancy-meter">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <h4>🏠 Vacancy Status</h4>
+        <span class="badge badge-success" id="vacancyBadge">Available</span>
+      </div>
+      <div style="font-size:14px;color:var(--text-muted);margin-bottom:8px">
+        <span id="vacancyText">42 rooms occupied out of 180 total capacity</span>
+      </div>
+      <div class="meter-bar">
+        <div class="meter-fill" id="vacancyFill" style="width:23%;background:var(--success)"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted)">
+        <span id="occupiedCount">42 Occupied</span>
+        <span id="vacantCount">138 Vacant</span>
+      </div>
+    </div>
+
+    <!-- Warden Contact -->
+    <div class="card" style="margin-bottom:20px">
+      <h4 style="margin-bottom:14px">👤 Warden Contact</h4>
+      <div class="warden-card">
+        <div class="avatar avatar-lg" id="wardenAvatar">SK</div>
+        <div class="warden-info">
+          <div class="name" id="wardenName">Mr. Suresh Kumar</div>
+          <div class="role">Chief Warden – Boys' Hostel</div>
+          <div class="contact" id="wardenPhone">📞 +91 98XXXXXXXX</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:2px" id="wardenEmail">📧 warden.boys@indiraicem.ac.in</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:2px">🕐 Office Hours: 9 AM – 6 PM (Mon–Sat)</div>
+        </div>
+      </div>
+      <div class="info-grid">
+        <div class="info-block"><div class="label">Hostel Fee (Per Semester)</div><div class="value">₹12,000 – ₹16,000</div></div>
+        <div class="info-block"><div class="label">Mess Timing</div><div class="value">7AM / 1PM / 8PM</div></div>
+        <div class="info-block"><div class="label">Curfew</div><div class="value" id="hostelCurfew">10:30 PM</div></div>
+        <div class="info-block"><div class="label">Visitor Hours</div><div class="value">10 AM – 6 PM</div></div>
+      </div>
+      <button class="btn btn-primary" onclick="messageWarden()">💬 Message Warden</button>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <h4>❓ Community FAQ</h4>
+        <button class="btn btn-outline btn-sm" onclick="openModal('addFAQModal')">+ Add Question</button>
+      </div>
+      <div id="faqList"></div>
+      <div class="faq-add" onclick="openModal('addFAQModal')">+ Add your question or answer</div>
+    </div>
+  </div>
+</div>
+
+<!-- Add FAQ Modal -->
+<div id="addFAQModal" class="modal-overlay hidden">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addFAQModal')">×</button>
+    <h3 style="margin-bottom:16px">Add Question / Answer</h3>
+    <div class="input-group">
+      <label>Your Question</label>
+      <input class="input-field" id="faqQuestion" placeholder="e.g. Is WiFi available in rooms?" />
+    </div>
+    <div class="input-group">
+      <label>Your Answer (Optional)</label>
+      <textarea class="input-field" style="min-height:80px;resize:vertical" id="faqAnswer" placeholder="Share what you know..."></textarea>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="submitFAQ()">Submit</button>
+  </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+<script src="utils.js"></script>
+<script>
+  const user = Auth.requireAuth();
+  buildNav('hostel');
+
+  function authHeader() {
+    const token = localStorage.getItem('edubond_access') || '';
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  async function apiJSON(url, options = {}) {
+    const headers = { ...(options.headers || {}), ...authHeader() };
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 401) {
+      showToast('Session expired. Please login again.', 'warning');
+      Auth.logout();
+      throw new Error('Unauthorized');
+    }
+    const isJson = (res.headers.get('content-type') || '').includes('application/json');
+    const data = isJson ? await res.json() : null;
+    if (!res.ok) throw new Error(data?.error || data?.detail || 'Request failed');
+    return data;
+  }
+
+  const HOSTEL_DATA = {
+    boys: {
+      title: "Boys' Hostel – Samarth Bhavan",
+      subtitle: 'Samarth Bhavan\nBlock A, B & C',
+      selectionBadge: '3 Blocks • 180 Rooms',
+      coverPhotoUrl: '',
+      warden: { name: 'Mr. Suresh Kumar', init: 'SK', phone: '+91 98XXXXXXXX', email: 'warden.boys@indiraicem.ac.in' },
+      total: 180, occupied: 42, curfew: '10:30 PM',
+      rooms: ['🛏️','🚿','🪑','📚','🍽️','🏃'],
+      faq: [
+        { q: 'Is WiFi available in hostel rooms?', a: 'Yes! 50 Mbps WiFi is available 24x7 in all rooms. Connect to "ICEM_Hostel" network. Password available from warden office.' },
+        { q: 'What are the mess timings?', a: 'Breakfast: 7–9 AM, Lunch: 12–2 PM, Dinner: 7:30–9 PM. Sunday special menu available.' },
+        { q: 'Can we bring our own appliances?', a: 'Small appliances like laptop, phone chargers and fans are allowed. Cooking appliances strictly not permitted.' },
+        { q: 'How to apply for hostel?', a: 'Visit the admin office with your ID proof, 2 passport photos, and fill Form H-01. Confirmation within 3 working days.' },
+      ]
+    },
+    girls: {
+      title: "Girls' Hostel – Savitri Bhavan",
+      subtitle: 'Savitri Bhavan\nBlock D & E',
+      selectionBadge: '2 Blocks • 120 Rooms',
+      coverPhotoUrl: '',
+      warden: { name: 'Mrs. Rekha Sharma', init: 'RS', phone: '+91 97XXXXXXXX', email: 'warden.girls@indiraicem.ac.in' },
+      total: 120, occupied: 68, curfew: '9:30 PM',
+      rooms: ['🛏️','🪞','🛁','📖','🌿','🎭'],
+      faq: [
+        { q: 'What is the curfew timing for girls hostel?', a: 'Curfew is 9:30 PM daily. Permission required from warden for late return. Emergency contact available 24x7.' },
+        { q: 'Is there a common room?', a: 'Yes, there\'s a common room with TV, carrom, and indoor games on ground floor of Block D.' },
+        { q: 'Are male visitors allowed?', a: 'Family members only, in the visitors lounge between 10 AM – 5 PM. ID verification required at gate.' },
+        { q: 'How many students per room?', a: 'Standard rooms are double-sharing. Single rooms available for final year students based on merit and availability.' },
+      ]
+    }
+  };
+
+  let currentHostel = 'boys';
+  let hostelsBySlug = {};
+  let faqCache = {};
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function renderHostelChoices() {
+    const all = { ...HOSTEL_DATA, ...hostelsBySlug };
+    const slugs = ['boys', 'girls'].filter(slug => all[slug]);
+    document.getElementById('hostelChoiceGrid').innerHTML = slugs.map(slug => {
+      const item = all[slug];
+      const badgeClass = slug === 'girls' ? 'badge-danger' : 'badge-primary';
+      const subtitle = escapeHtml(item.subtitle || '').replace(/\n/g, '<br>');
+      const photo = item.coverPhotoUrl
+        ? `<img class="hostel-choice-photo" src="${item.coverPhotoUrl}" alt="${escapeHtml(item.title)}" />`
+        : `<div class="icon">${slug === 'girls' ? '🏡' : '🏠'}</div>`;
+      return `
+        <div class="hostel-choice-card ${slug}" onclick="openHostel('${slug}')">
+          ${photo}
+          <h3>${escapeHtml(item.title || slug)}</h3>
+          <p>${subtitle || 'Hostel details available'}</p>
+          <div style="margin-top:14px"><span class="badge ${badgeClass}">${escapeHtml(item.selectionBadge || '')}</span></div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function openHostel(type) {
+    currentHostel = type;
+    const data = hostelsBySlug[type] || HOSTEL_DATA[type];
+    document.getElementById('hostelSelect').classList.add('hidden');
+    document.getElementById('hostelDetail').classList.remove('hidden');
+    document.getElementById('hostelDetailTitle').textContent = data.title;
+    document.getElementById('wardenName').textContent = data.warden.name;
+    document.getElementById('wardenAvatar').innerHTML = data.warden.photoUrl
+      ? `<img src="${data.warden.photoUrl}" alt="${data.warden.name}" class="warden-avatar-img" />`
+      : escapeHtml(data.warden.init);
+    document.getElementById('wardenPhone').textContent = '📞 ' + data.warden.phone;
+    document.getElementById('wardenEmail').textContent = '📧 ' + data.warden.email;
+    document.getElementById('hostelCurfew').textContent = data.curfew;
+
+    const detailPhoto = document.getElementById('detailHostelPhoto');
+    if (data.coverPhotoUrl) {
+      detailPhoto.src = data.coverPhotoUrl;
+      detailPhoto.classList.remove('hidden');
+    } else {
+      detailPhoto.removeAttribute('src');
+      detailPhoto.classList.add('hidden');
+    }
+
+    const pct = Math.round((data.occupied / data.total) * 100);
+    const vacant = data.total - data.occupied;
+    document.getElementById('vacancyText').textContent = `${data.occupied} rooms occupied out of ${data.total} total capacity`;
+    document.getElementById('occupiedCount').textContent = data.occupied + ' Occupied';
+    document.getElementById('vacantCount').textContent = vacant + ' Vacant';
+    const fill = document.getElementById('vacancyFill');
+    fill.style.width = pct + '%';
+    fill.style.background = pct > 80 ? '#ef4444' : pct > 50 ? '#f59e0b' : '#10b981';
+    document.getElementById('vacancyBadge').textContent = vacant > 0 ? 'Seats Available' : 'Full';
+    document.getElementById('vacancyBadge').className = 'badge ' + (vacant > 0 ? 'badge-success' : 'badge-danger');
+
+    // Room gallery
+    document.getElementById('roomGallery').innerHTML = data.rooms.map(r => `<div class="room-photo">${r}</div>`).join('');
+
+    await renderFAQ(type);
+  }
+
+  async function renderFAQ(type) {
+    let all = HOSTEL_DATA[type].faq;
+    try {
+      const rows = await apiJSON(`/api/hostel/hostels/${type}/faqs/`, { method: 'GET' });
+      faqCache[type] = Array.isArray(rows) ? rows : [];
+      const dynamic = faqCache[type].map(x => ({ q: x.question, a: x.answer || '' }));
+      all = [...all, ...dynamic];
+    } catch (_err) {
+      // fallback to static only
+    }
+    document.getElementById('faqList').innerHTML = all.map((item, i) => `
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFAQ(${i})">
+          <span>Q: ${item.q}</span>
+          <span id="faq-icon-${i}">▼</span>
+        </div>
+        <div class="faq-a" id="faq-a-${i}">
+          ${item.a || '<em style="color:var(--text-light)">No answer yet — be the first to answer!</em>'}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function toggleFAQ(i) {
+    const el = document.getElementById('faq-a-' + i);
+    const icon = document.getElementById('faq-icon-' + i);
+    const isOpen = el.classList.toggle('open');
+    icon.textContent = isOpen ? '▲' : '▼';
+  }
+
+  async function submitFAQ() {
+    const q = document.getElementById('faqQuestion').value.trim();
+    const a = document.getElementById('faqAnswer').value.trim();
+    if (!q) return showToast('Please enter a question!', 'error');
+    try {
+      await apiJSON(`/api/hostel/hostels/${currentHostel}/faqs/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, answer: a }),
+      });
+    } catch (err) {
+      showToast(err.message, 'error');
+      return;
+    }
+    closeModal('addFAQModal');
+    document.getElementById('faqQuestion').value = '';
+    document.getElementById('faqAnswer').value = '';
+    await renderFAQ(currentHostel);
+    showToast('Question added to FAQ! 📢', 'success');
+  }
+
+  async function initHostels() {
+    try {
+      const rows = await apiJSON('/api/hostel/hostels/', { method: 'GET' });
+      (Array.isArray(rows) ? rows : []).forEach(h => {
+        hostelsBySlug[h.slug] = {
+          title: h.title,
+          subtitle: h.subtitle || '',
+          selectionBadge: h.selection_badge || '',
+          coverPhotoUrl: h.cover_photo_url || '',
+          warden: {
+            name: h.warden_name,
+            init: h.warden_init,
+            photoUrl: h.warden_photo_url || '',
+            phone: h.warden_phone,
+            email: h.warden_email
+          },
+          total: h.total_capacity,
+          occupied: h.occupied,
+          curfew: h.curfew,
+          rooms: HOSTEL_DATA[h.slug]?.rooms || ['🛏️','🚿','🪑','📚','🍽️','🏃'],
+          faq: HOSTEL_DATA[h.slug]?.faq || []
+        };
+      });
+    } catch (_err) {
+      // fallback to static map
+    }
+    renderHostelChoices();
+  }
+
+  function messageWarden() {
+    const data = hostelsBySlug[currentHostel] || HOSTEL_DATA[currentHostel];
+    const w = data.warden || { name: 'Warden', init: 'WD', email: '' };
+    openChat(w.name, w.init || 'WD', 'Hostel inquiry', w.email || w.name);
+  }
+
+  initHostels();
+</script>
+</body>
+</html>

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduBond – Study Hub</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .studyhub-hero { background: linear-gradient(135deg, #059669, #0d9488); color: #fff; padding: 32px 24px; border-radius: var(--radius-lg); margin-bottom: 24px; }
+    .studyhub-hero h2 { font-size: 26px; margin-bottom: 6px; }
+    .studyhub-hero p { opacity: 0.85; font-size: 14px; }
+    .filter-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+    .filter-panel h4 { font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
+    .filter-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+    .filter-row .input-group { margin-bottom: 0; min-width: 160px; flex: 1; }
+    .notes-list { display: flex; flex-direction: column; gap: 12px; }
+    .notes-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex; align-items: center; gap: 14px;
+      transition: all 0.2s;
+    }
+    .notes-item:hover { box-shadow: var(--shadow); border-color: var(--primary); }
+    .notes-file-icon { width: 48px; height: 48px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .notes-file-icon.pdf { background: #fee2e2; }
+    .notes-file-icon.doc { background: #dbeafe; }
+    .notes-file-icon.img { background: #d1fae5; }
+    .notes-meta { flex: 1; }
+    .notes-meta .title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+    .notes-meta .details { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .notes-meta .uploader { display: flex; align-items: center; gap: 6px; color: var(--primary); font-size: 13px; font-weight: 500; margin-top: 6px; }
+    .notes-actions { display: flex; gap: 8px; }
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px 24px;
+      text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface2);
+    }
+    .upload-zone:hover { border-color: var(--success); background: #ecfdf5; }
+    .upload-zone .icon { font-size: 48px; margin-bottom: 10px; }
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
+    .stat-card .num { font-size: 28px; font-weight: 800; font-family: var(--font-head); color: var(--primary); }
+    .stat-card .lbl { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    @media (max-width: 640px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+    .subject-chip { padding: 6px 14px; border: 2px solid var(--border); border-radius: 99px; font-size: 13px; cursor: pointer; background: var(--surface); color: var(--text-muted); transition: all 0.2s; white-space: nowrap; font-weight: 500; }
+    .subject-chip.active { border-color: #059669; background: #ecfdf5; color: #059669; }
+  </style>
+</head>
+<body>
+<div class="main-content-full" style="padding:24px;max-width:1100px;margin:var(--nav-h) auto 0">
+
+  <div class="studyhub-hero">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div>
+        <h2>📚 Study Hub</h2>
+        <p>Free notes & PYQs shared by students, for students. Filter by your year and branch.</p>
+      </div>
+      <button class="btn btn-success" onclick="openModal('uploadModal')">⬆️ Upload Notes / PYQ</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card"><div class="num" id="statNotes">0</div><div class="lbl">Notes Uploaded</div></div>
+    <div class="stat-card"><div class="num" id="statPyq">0</div><div class="lbl">PYQs Available</div></div>
+    <div class="stat-card"><div class="num" id="statDownloads">0</div><div class="lbl">Downloads</div></div>
+    <div class="stat-card"><div class="num" id="statBranches">0</div><div class="lbl">Branches</div></div>
+  </div>
+
+  <!-- Filter Panel -->
+  <div class="filter-panel">
+    <h4>🔍 Filter Study Material</h4>
+    <div class="filter-row">
+      <div class="input-group">
+        <label>Year</label>
+        <select class="input-field" id="filterYear" onchange="applyFilters()">
+          <option value="">All Years</option>
+          <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Branch</label>
+        <select class="input-field" id="filterBranch" onchange="applyFilters()">
+          <option value="">All Branches</option>
+          <option>CSE</option><option>AI & DS</option><option>IT</option><option>ECE</option><option>EE</option><option>ME</option><option>CE</option><option>CH</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Subject</label>
+        <input class="input-field" id="filterSubject" placeholder="e.g. Data Structures" oninput="applyFilters()" />
+      </div>
+      <button class="btn btn-primary" onclick="applyFilters()">Apply Filter</button>
+      <button class="btn btn-outline" onclick="clearFilters()">Clear</button>
+    </div>
+  </div>
+
+  <!-- Tabs: Notes vs PYQ -->
+  <div class="tabs" style="margin-bottom:20px;max-width:300px">
+    <button class="tab-btn active" id="tabNotes" onclick="switchHubTab('notes')">📝 Notes</button>
+    <button class="tab-btn" id="tabPYQ" onclick="switchHubTab('pyq')">📋 PYQs</button>
+  </div>
+
+  <!-- Subject quick-filter chips -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" id="subjectChips"></div>
+
+  <!-- Notes/PYQ List -->
+  <div class="notes-list" id="notesList"></div>
+</div>
+
+<!-- Upload Modal -->
+<div id="uploadModal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:540px">
+    <button class="modal-close" onclick="closeModal('uploadModal')">×</button>
+    <h3 style="margin-bottom:4px">⬆️ Upload Study Material</h3>
+    <p class="text-muted text-sm" style="margin-bottom:20px">Help your fellow students — upload your notes or PYQs</p>
+
+    <div class="tabs" style="margin-bottom:16px;max-width:240px">
+      <button class="tab-btn active" id="upTabNotes" onclick="switchUploadType('notes')">📝 Notes</button>
+      <button class="tab-btn" id="upTabPYQ" onclick="switchUploadType('pyq')">📋 PYQ</button>
+    </div>
+
+    <div class="grid-2" style="gap:12px">
+      <div class="input-group">
+        <label>Year</label>
+        <select class="input-field" id="upYear">
+          <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Branch</label>
+        <select class="input-field" id="upBranch">
+          <option>CSE</option><option>AI & DS</option><option>IT</option><option>ECE</option><option>EE</option><option>ME</option><option>CE</option><option>CH</option>
+        </select>
+      </div>
+    </div>
+    <div class="input-group">
+      <label>Subject Name</label>
+      <input class="input-field" id="upSubject" placeholder="e.g. Data Structures and Algorithms" />
+    </div>
+    <div class="input-group">
+      <label>Title / Description</label>
+      <input class="input-field" id="upTitle" placeholder="e.g. Unit 3 - Trees and Graphs (Handwritten)" />
+    </div>
+    <div id="pyqFields" class="hidden">
+      <div class="grid-2" style="gap:12px">
+        <div class="input-group">
+          <label>Exam Year</label>
+          <select class="input-field" id="upExamYear">
+            <option>2024</option><option>2023</option><option>2022</option><option>2021</option><option>2020</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Exam Type</label>
+          <select class="input-field" id="upExamType">
+            <option>Mid-Sem</option><option>End-Sem</option><option>Unit Test</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="upload-zone" onclick="document.getElementById('fileUpload').click()">
+      <div class="icon">📎</div>
+      <p style="font-weight:600;margin-bottom:4px">Click to select file</p>
+      <p style="font-size:12px;color:var(--text-muted)">PDF, DOCX, JPG, PNG supported (max 20MB)</p>
+      <input type="file" id="fileUpload" style="display:none" accept=".pdf,.docx,.jpg,.jpeg,.png" onchange="fileSelected(this)" />
+    </div>
+    <div id="fileSelectedMsg" class="hidden" style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 14px;margin-top:8px;font-size:13px;display:flex;align-items:center;gap:8px">
+      <span>📄</span><span id="fileNameText"></span>
+    </div>
+    <button class="btn btn-success btn-full" style="margin-top:16px" onclick="submitUpload()">🚀 Upload & Share</button>
+  </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+<script src="utils.js"></script>
+<script>
+  const user = Auth.requireAuth();
+  buildNav('studyhub');
+
+  let allNotes = [];
+  let activeHubTab = 'notes';
+  let uploadType = 'notes';
+  let activeSubject = '';
+  let selectedUpload = null; // File object
+
+  function authHeader() {
+    const token = localStorage.getItem('edubond_access') || '';
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  async function apiRequest(url, options = {}) {
+    const res = await fetch(url, { ...options, headers: { ...(options.headers || {}), ...authHeader() } });
+    if (res.status === 401) {
+      showToast('Session expired. Please login again.', 'warning');
+      Auth.logout();
+      throw new Error('Unauthorized');
+    }
+    const isJson = (res.headers.get('content-type') || '').includes('application/json');
+    const data = isJson ? await res.json() : null;
+    if (!res.ok) throw new Error(data?.error || data?.detail || 'Request failed');
+    return data;
+  }
+
+  function timeAgo(iso) {
+    const d = new Date(iso);
+    const diff = Date.now() - d.getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'Just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const days = Math.floor(h / 24);
+    return `${days}d ago`;
+  }
+
+  function mapMaterial(n) {
+    const fileUrl = n.file ? (n.file.startsWith('http') ? n.file : n.file) : '';
+    const ext = (fileUrl.split('.').pop() || '').toLowerCase();
+    const fileType = n.file_type || (['jpg','jpeg','png'].includes(ext) ? 'img' : ext === 'docx' ? 'doc' : 'pdf');
+    return {
+      id: n.id,
+      type: n.type,
+      title: n.title,
+      subject: n.subject,
+      year: n.year,
+      branch: n.branch,
+      uploader: n.uploader || 'User',
+      uploaderInit: n.uploader_init || 'U',
+      uploaderAvatar: n.uploader_avatar || '',
+      uploaderEmail: (n.uploader_email || '').toLowerCase(),
+      fileType,
+      size: n.file_size || '',
+      downloads: Number(n.downloads || 0),
+      date: timeAgo(n.created_at),
+      examYear: n.exam_year || '',
+      examType: n.exam_type || '',
+      fileUrl,
+    };
+  }
+
+  async function loadMaterials() {
+    const data = await apiRequest('/api/studyhub/materials/', { method: 'GET' });
+    allNotes = (Array.isArray(data) ? data : []).map(mapMaterial);
+  }
+
+  async function loadSubjects() {
+    try {
+      const data = await apiRequest('/api/studyhub/subjects/', { method: 'GET' });
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [...new Set(allNotes.map(n => n.subject))];
+    }
+  }
+
+  function renderSubjectChips() {
+    const chips = document.getElementById('subjectChips');
+    const subjects = [...new Set(allNotes.map(n => n.subject).filter(Boolean))];
+    chips.innerHTML = ['All', ...subjects].map(s => `
+      <div class="subject-chip ${activeSubject === s || (s === 'All' && !activeSubject) ? 'active' : ''}" onclick="setSubject('${s === 'All' ? '' : s}',this)">${s}</div>
+    `).join('');
+  }
+
+  function formatCompact(n) {
+    if (n >= 1000000) return `${(n / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
+    if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}K`;
+    return String(n);
+  }
+
+  function renderStats() {
+    const notesCount = allNotes.filter(n => n.type === 'notes').length;
+    const pyqCount = allNotes.filter(n => n.type === 'pyq').length;
+    const totalDownloads = allNotes.reduce((sum, n) => sum + Number(n.downloads || 0), 0);
+    const branchCount = new Set(allNotes.map(n => n.branch).filter(Boolean)).size;
+    document.getElementById('statNotes').textContent = String(notesCount);
+    document.getElementById('statPyq').textContent = String(pyqCount);
+    document.getElementById('statDownloads').textContent = formatCompact(totalDownloads);
+    document.getElementById('statBranches').textContent = String(branchCount);
+  }
+
+  function setSubject(s, el) {
+    activeSubject = s;
+    document.querySelectorAll('.subject-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderNotes();
+  }
+
+  function getFilters() {
+    return {
+      year: document.getElementById('filterYear').value,
+      branch: document.getElementById('filterBranch').value,
+      subject: document.getElementById('filterSubject').value.toLowerCase()
+    };
+  }
+
+  function applyFilters() { renderNotes(); }
+  function clearFilters() {
+    document.getElementById('filterYear').value = '';
+    document.getElementById('filterBranch').value = '';
+    document.getElementById('filterSubject').value = '';
+    renderNotes();
+  }
+
+  function renderNotes() {
+    const { year, branch, subject } = getFilters();
+    const list = document.getElementById('notesList');
+    let filtered = allNotes.filter(n => {
+      return n.type === activeHubTab &&
+        (!year || n.year === year) &&
+        (!branch || n.branch === branch) &&
+        (!subject || n.subject.toLowerCase().includes(subject)) &&
+        (!activeSubject || n.subject === activeSubject);
+    });
+
+    if (!filtered.length) {
+      list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No ${activeHubTab === 'notes' ? 'notes' : 'PYQs'} found for the selected filters.</p><button class="btn btn-success mt-3" onclick="openModal('uploadModal')">Be the first to upload!</button></div>`;
+      return;
+    }
+
+    const icons = { pdf: '📄', doc: '📝', img: '🖼️' };
+    const colors = { pdf: 'pdf', doc: 'doc', img: 'img' };
+    const avatarFor = n => {
+      return n.uploaderAvatar || '';
+    };
+    const uploaderKeyFor = n => {
+      if (n.uploaderEmail) return n.uploaderEmail;
+      const p = getPerson(n.uploader || '');
+      return p?.email || n.uploader || '';
+    };
+
+    list.innerHTML = filtered.map(n => `
+      <div class="notes-item">
+        <div class="notes-file-icon ${colors[n.fileType] || 'pdf'}">${icons[n.fileType] || '📄'}</div>
+        <div class="notes-meta">
+          <div class="title">${n.title}</div>
+          <div class="details">
+            <span class="badge badge-primary">${n.subject}</span>
+            <span class="badge badge-success">${n.year}</span>
+            <span class="badge badge-accent">${n.branch}</span>
+            ${n.examYear ? `<span class="badge badge-danger">${n.examType} ${n.examYear}</span>` : ''}
+            <span style="color:var(--text-muted)">📥 ${n.downloads} downloads</span>
+            <span style="color:var(--text-muted)">${n.size}</span>
+            <span style="color:var(--text-muted)">${n.date}</span>
+          </div>
+          <div class="uploader">
+            <div class="avatar" style="width:22px;height:22px;font-size:9px;overflow:hidden">${
+              avatarFor(n)
+                ? `<img src="${avatarFor(n)}" alt="${n.uploader}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`
+                : n.uploaderInit
+            }</div>
+            <span>Uploaded by <strong>${n.uploader}</strong></span>
+          </div>
+        </div>
+        <div class="notes-actions">
+          <button class="btn btn-primary btn-sm" onclick="downloadNote(${n.id})">⬇️ Download</button>
+          <button class="btn btn-outline btn-sm" onclick="openChat('${n.uploader}','${n.uploaderInit}','About ${n.subject} notes','${uploaderKeyFor(n)}')">💬 Ask</button>
+          ${((n.uploaderEmail || '').toLowerCase() === (user.email || '').toLowerCase())
+            ? `<button class="btn btn-outline btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="removeUpload(${n.id})">🗑 Remove</button>`
+            : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function downloadNote(id) {
+    const note = allNotes.find(n => n.id === id);
+    if (!note) return;
+    try {
+      await apiRequest(`/api/studyhub/materials/${id}/download/`, { method: 'POST' });
+    } catch (err) {
+      showToast(err.message, 'error');
+      return;
+    }
+    if (!note.fileUrl) {
+      showToast(`No file available for "${note.title}"`, 'warning');
+      return;
+    }
+    window.open(note.fileUrl, '_blank');
+    const item = allNotes.find(n => n.id === id);
+    if (item) item.downloads += 1;
+    renderStats();
+    renderNotes();
+  }
+
+  function switchHubTab(tab) {
+    activeHubTab = tab;
+    document.getElementById('tabNotes')?.classList.toggle('active', tab === 'notes');
+    document.getElementById('tabPYQ')?.classList.toggle('active', tab === 'pyq');
+    renderNotes();
+  }
+
+  function switchUploadType(type) {
+    uploadType = type;
+    document.getElementById('upTabNotes')?.classList.toggle('active', type === 'notes');
+    document.getElementById('upTabPYQ')?.classList.toggle('active', type === 'pyq');
+    document.getElementById('pyqFields').classList.toggle('hidden', type !== 'pyq');
+  }
+
+  function fileSelected(input) {
+    if (!input.files.length) return;
+    const file = input.files[0];
+    if (file.size > 20 * 1024 * 1024) {
+      showToast('File too large. Please choose a file under 20MB.', 'error');
+      input.value = '';
+      selectedUpload = null;
+      return;
+    }
+    document.getElementById('fileSelectedMsg').classList.remove('hidden');
+    document.getElementById('fileNameText').textContent = `${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
+    selectedUpload = file;
+    showToast('File selected: ' + file.name, 'success');
+  }
+
+  async function submitUpload() {
+    const subject = document.getElementById('upSubject').value.trim();
+    const title = document.getElementById('upTitle').value.trim();
+    const year = document.getElementById('upYear').value;
+    const branch = document.getElementById('upBranch').value;
+    if (!subject || !title) return showToast('Fill in subject and title!', 'error');
+    if (!selectedUpload) return showToast('Please select a file to upload', 'error');
+
+    const ext = selectedUpload.name.split('.').pop().toLowerCase();
+    const fileType = ['jpg','jpeg','png'].includes(ext) ? 'img' : (ext === 'docx' ? 'doc' : 'pdf');
+    const form = new FormData();
+    form.append('type', uploadType);
+    form.append('title', title);
+    form.append('subject', subject);
+    form.append('year', year);
+    form.append('branch', branch);
+    form.append('file_type', fileType);
+    form.append('file_size', `${(selectedUpload.size/1024/1024).toFixed(1)} MB`);
+    form.append('file', selectedUpload);
+    if (uploadType === 'pyq') {
+      form.append('exam_year', document.getElementById('upExamYear').value);
+      form.append('exam_type', document.getElementById('upExamType').value);
+    }
+    try {
+      await fetch('/api/studyhub/materials/', {
+        method: 'POST',
+        headers: { ...authHeader() },
+        body: form,
+      }).then(async r => {
+        if (r.status === 401) { Auth.logout(); throw new Error('Unauthorized'); }
+        if (!r.ok) {
+          let d = {};
+          try { d = await r.json(); } catch {}
+          throw new Error(d.error || d.detail || 'Upload failed');
+        }
+      });
+    } catch (err) {
+      showToast(err.message, 'error');
+      return;
+    }
+
+    document.getElementById('upSubject').value = '';
+    document.getElementById('upTitle').value = '';
+    document.getElementById('fileUpload').value = '';
+    document.getElementById('fileSelectedMsg').classList.add('hidden');
+    selectedUpload = null;
+    closeModal('uploadModal');
+    showToast('Uploaded successfully! 🎉', 'success');
+    await loadMaterials();
+    renderStats();
+    renderNotes();
+    renderSubjectChips();
+  }
+
+  async function removeUpload(id) {
+    const note = allNotes.find(n => n.id === id);
+    if (!note) return;
+    if (!confirm(`Remove "${note.title}" from Study Hub?`)) return;
+    try {
+      await apiRequest(`/api/studyhub/materials/${id}/`, { method: 'DELETE' });
+      await loadMaterials();
+    } catch (err) {
+      showToast(err.message, 'error');
+      return;
+    }
+    showToast('Upload removed successfully.', 'success');
+    renderStats();
+    renderSubjectChips();
+    renderNotes();
+  }
+
+  (async function init() {
+    try {
+      await loadMaterials();
+      await loadSubjects();
+      renderStats();
+      renderSubjectChips();
+      renderNotes();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  })();
+</script>
+</body>
+</html>
