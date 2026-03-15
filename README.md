@@ -32,13 +32,6 @@ Filter study materials by year/branch or check real-time hostel availability and
 
 ---
 
-### 👤 User Profile & Networking
-Showcase your academic identity and manage your campus connections.
-
-<img src="./assets/profile.jpg" width="800" alt="User Profile">
-
----
-
 # ✨ Features
 * Verified Profiles:** Mandatory college email login to ensure a safe, campus-only community.
 * Alumni Network:** Connect with seniors and alumni for mentorship and guidance.
