@@ -43,7 +43,7 @@ EduBond is a college-focused platform where students can create profiles using t
 
 # Quick Start
 ```bash
-git clone 
+git clone https://github.com/sagarpc1006/EDUBOND.git
 cd <repo-folder>
 
 # 1) Create and activate a virtualenv
